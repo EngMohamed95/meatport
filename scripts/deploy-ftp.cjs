@@ -19,13 +19,36 @@ async function run() {
   // 2. Load and validate FTP configuration
   const host = 'ftp.meatport.net';
   const user = 'u177160961.meatport';
-  const password = process.env.FTP_PASSWORD;
+  let password = process.env.FTP_PASSWORD;
   const remoteDir = '/home/u177160961/domains/meatport.net/public_html';
 
   if (!password) {
-    console.error('\nError: FTP_PASSWORD is not set in the environment or .env file.');
-    console.error('Please add the password to your .env file like this:');
-    console.error('FTP_PASSWORD="your_ftp_password_here"\n');
+    const readline = require('readline');
+    const askPassword = () => new Promise((resolve) => {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+      console.log('FTP_PASSWORD was not found in .env.');
+      rl.stdoutMuted = true;
+      rl.question('Please enter your FTP password: ', (answer) => {
+        rl.close();
+        resolve(answer.trim());
+      });
+      rl._writeToOutput = function _writeToOutput(stringToWrite) {
+        if (rl.stdoutMuted && stringToWrite !== '\r\n' && stringToWrite !== '\n' && stringToWrite !== '\r') {
+          rl.output.write('*');
+        } else {
+          rl.output.write(stringToWrite);
+        }
+      };
+    });
+    password = await askPassword();
+    console.log('\nPassword received.');
+  }
+
+  if (!password) {
+    console.error('\nError: Password is required for deployment.');
     process.exit(1);
   }
 
