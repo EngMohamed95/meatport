@@ -20,7 +20,7 @@ async function run() {
   const host = 'ftp.meatport.net';
   const user = 'u177160961.meatport';
   let password = process.env.FTP_PASSWORD;
-  const remoteDir = '/home/u177160961/domains/meatport.net/public_html';
+  const remoteDir = './';
 
   if (!password) {
     const readline = require('readline');

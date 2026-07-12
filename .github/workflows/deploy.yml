@@ -32,4 +32,5 @@ jobs:
           username: u177160961.meatport
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          server-dir: /home/u177160961/domains/meatport.net/public_html/
+          server-dir: ./
+
