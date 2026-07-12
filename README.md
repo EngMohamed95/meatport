@@ -18,3 +18,8 @@ View your app in AI Studio: https://ai.studio/apps/d356b768-cf97-47b2-977f-a05de
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Deployment
+
+This project is configured with GitHub Actions to automatically build and deploy to the FTP host `ftp.meatport.net` on every push to the `main` branch.
+
