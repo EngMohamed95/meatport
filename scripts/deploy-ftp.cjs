@@ -52,14 +52,8 @@ async function run() {
     process.exit(1);
   }
 
-  // 3. Build the application first
-  console.log('Building project for production (npm run build)...');
-  try {
-    execSync('npm run build', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
-  } catch (e) {
-    console.error('Build failed. Aborting deployment.');
-    process.exit(1);
-  }
+  // 3. (Build step is now run separately in the shell before deployment)
+  console.log('Using compiled build files (contents of dist/)...');
 
   // 4. FTP Upload
   const client = new ftp.Client();
