@@ -1,0 +1,6 @@
+{
+  "name": "SaaS Restaurant Management System",
+  "description": "An enterprise-grade SaaS restaurant menu management system featuring multi-tenancy, digital menus, and admin controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

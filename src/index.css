@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+[dir="rtl"],
+[dir="rtl"] * {
+  font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.category-scroller {
+  cursor: grab;
+  scroll-behavior: smooth;
+  scrollbar-color: rgba(225, 29, 72, 0.55) transparent;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+  user-select: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-scroller:active {
+  cursor: grabbing;
+}
+
+.category-scroller::-webkit-scrollbar {
+  height: 6px;
+}
+
+.category-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.category-scroller::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(225, 29, 72, 0.25), rgba(225, 29, 72, 0.75));
+  border-radius: 999px;
+}
+
+.category-pill {
+  animation: category-rise 0.55s ease both;
+  touch-action: manipulation;
+}
+
+.category-pill:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+.product-card {
+  animation: menu-card-rise 0.55s ease both;
+}
+
+.product-title {
+  color: #111827 !important;
+  opacity: 1 !important;
+}
+
+.dark .product-title {
+  color: #f9fafb !important;
+}
+
+.product-add-button {
+  background: rgba(225, 29, 72, 0.08) !important;
+  color: #e11d48 !important;
+}
+
+.product-card:hover .product-add-button,
+.group:hover .product-add-button,
+.product-add-button:hover {
+  background: var(--tenant-primary, #e11d48) !important;
+  color: #ffffff !important;
+}
+
+.product-add-button svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+@keyframes category-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

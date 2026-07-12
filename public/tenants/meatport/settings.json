@@ -1,0 +1,11 @@
+{
+  "id": "t-1",
+  "nameEn": "Meatport",
+  "nameAr": "Meatport",
+  "slug": "meatport",
+  "logoUrl": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&h=150&fit=crop&q=80",
+  "primaryColor": "#e11d48",
+  "currencyEn": "SAR",
+  "currencyAr": "ر.س",
+  "status": "active"
+}
