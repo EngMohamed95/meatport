@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   initialTenants, initialBranches, initialCategories, 
   initialModifierGroups, initialProducts, initialAuditLogs,
@@ -218,6 +218,15 @@ export default function App() {
 
   const [lang, setLang] = useState<'en' | 'ar'>('ar'); // Default to Arabic as requested
   const [darkMode, setDarkMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
 
   // Active Staff Member session
   const [activeStaff, setActiveStaff] = useState<{

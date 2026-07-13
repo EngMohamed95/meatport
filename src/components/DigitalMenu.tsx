@@ -6,6 +6,30 @@ import {
 } from 'lucide-react';
 import { Product, Category, ModifierGroup, Tenant, Branch } from '../types';
 
+const SaudiRiyalIcon = ({ className = "h-[0.8em] w-auto inline-block align-middle ml-1" }: { className?: string }) => {
+  return (
+    <svg className={className} viewBox="0 0 1124.14 1256.39" fill="currentColor" style={{ height: '0.9em', verticalAlign: 'middle' }}>
+      <path d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z" />
+      <path d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z" />
+    </svg>
+  );
+};
+
+const highlightText = (text: string, highlight: string) => {
+  if (!highlight.trim()) return <span>{text}</span>;
+  const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\interface DigitalMenuProps {')})`, 'gi');
+  const parts = text.split(regex);
+  return (
+    <span>
+      {parts.map((part, i) => 
+        regex.test(part) 
+          ? <mark key={i} className="bg-amber-500/25 text-amber-600 rounded px-0.5 dark:bg-amber-500/35 dark:text-amber-400 font-extrabold">{part}</mark> 
+          : part
+      )}
+    </span>
+  );
+};
+
 interface DigitalMenuProps {
   tenant: Tenant;
   branches: Branch[];
@@ -62,6 +86,36 @@ export default function DigitalMenu({
 }: DigitalMenuProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Search utility states
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const placeholdersAr = useMemo(() => ['ستيك تندرلوين طازج...', 'كباب لحم مشوي عالتيس...', 'سلطات مشكلة ولذيذة...', 'مقبلات ساخنة وبطاطس مقرمشة...', 'أطباق خاصة وكرات اللحم...'], []);
+  const placeholdersEn = useMemo(() => ['Fresh tenderloin steak...', 'Grilled meat kebab...', 'Crispy fresh salads...', 'Hot appetizers & fries...', 'Meatport special meatballs...'], []);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPlaceholderIndex(prev => (prev + 1) % placeholdersAr.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [placeholdersAr.length]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === '/') {
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   
   // Design layout configuration
   const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
@@ -143,16 +197,41 @@ export default function DigitalMenu({
   }, [products, tenant]);
 
   const tenantProducts = useMemo(() => {
-    return products
-      .filter(p => p.tenantId === tenant.id && p.isVisible)
-      .filter(p => {
-        const matchesCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
-        const matchesSearch = p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              p.nameAr.includes(searchQuery) ||
-                              (p.descriptionEn && p.descriptionEn.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                              (p.descriptionAr && p.descriptionAr.includes(searchQuery));
-        return matchesCategory && matchesSearch;
-      });
+    const activeProducts = products.filter(p => p.tenantId === tenant.id && p.isVisible);
+    
+    if (!searchQuery.trim()) {
+      return activeProducts.filter(p => selectedCategory === 'all' || p.categoryId === selectedCategory);
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    // Fuzzy Scoring: compute score and filter matching items
+    return activeProducts
+      .map(p => {
+        let score = 0;
+        const nameEn = p.nameEn.toLowerCase();
+        const nameAr = p.nameAr;
+        const descEn = (p.descriptionEn || '').toLowerCase();
+        const descAr = p.descriptionAr || '';
+        
+        // Exact name match (highest)
+        if (nameEn === query || nameAr === query) score += 100;
+        // Starts with match
+        else if (nameEn.startsWith(query) || nameAr.startsWith(query)) score += 80;
+        // Word boundary match
+        else if (nameEn.includes(' ' + query) || nameAr.includes(' ' + query)) score += 60;
+        // Substring name match
+        else if (nameEn.includes(query) || nameAr.includes(query)) score += 40;
+        
+        // Description match (lower weight)
+        if (descEn.includes(query) || descAr.includes(query)) score += 20;
+        
+        return { product: p, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.product)
+      .filter(p => selectedCategory === 'all' || p.categoryId === selectedCategory);
   }, [products, tenant, selectedCategory, searchQuery]);
 
   const selectedCategoryInfo = useMemo(() => {
@@ -625,168 +704,124 @@ export default function DigitalMenu({
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         
         {/* Search bar & utilities */}
-        <div className="relative max-w-xl mx-auto">
-          <Search className="absolute top-3.5 left-4 w-4 h-4 text-gray-400" />
-          <input 
-            type="text"
-            placeholder={lang === 'ar' ? 'ابحث عن وجبتك المفضلة...' : 'Craving something? Search the menu...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full py-3.5 pl-11 pr-5 text-sm rounded-2xl border transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-              darkMode 
-                ? 'bg-gray-900 border-gray-800 text-gray-100 placeholder-gray-500 focus:ring-rose-600' 
-                : 'bg-white border-gray-200 text-gray-800 placeholder-gray-400 focus:ring-rose-600 shadow-sm'
-            }`}
-          />
-        </div>
-        {featuredProducts.length > 0 && searchQuery === '' && (
-          <div id="featured" className="space-y-4 scroll-mt-20">
-            <h3 className="text-lg font-bold tracking-tight flex items-center gap-1.5">
-              <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 animate-pulse" />
-              {lang === 'ar' ? 'توصيات الشيف الخاصة' : 'Chef’s Masterpiece Creations'}
-            </h3>
+        <div className="relative max-w-xl mx-auto space-y-3.5">
+          {/* Creative Search Bar */}
+          <div className="relative group">
+            {/* Ambient background glow on focus/hover */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500 to-amber-500 rounded-2xl blur-md opacity-25 group-hover:opacity-40 transition duration-300 pointer-events-none" />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {featuredProducts.map(p => (
-                <div 
-                  key={p.id}
-                  onClick={() => handleOpenProduct(p)}
-                  className={`group rounded-3xl overflow-hidden cursor-pointer flex flex-col md:flex-row border transition-all hover:scale-[1.01] hover:shadow-md ${
-                    darkMode 
-                      ? 'bg-gray-900/40 border-gray-800 hover:border-gray-700' 
-                      : 'bg-white border-gray-100 hover:border-rose-100'
-                  }`}
-                >
-                  <div className="relative h-48 md:h-auto md:w-48 overflow-hidden flex-shrink-0">
-                    <img 
-                      src={p.imageUrl} 
-                      alt={p.nameEn} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-3 left-3 bg-rose-600 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
-                      {lang === 'ar' ? 'مميز' : 'Featured'}
-                    </div>
-                  </div>
-
-                  <div className="p-6 flex flex-col justify-between flex-1 space-y-4">
-                    <div className="space-y-1.5 text-right">
-                      <h4 className="product-title font-bold text-lg transition">
-                        {lang === 'ar' ? p.nameAr : p.nameEn}
-                      </h4>
-                      <p className={`text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {lang === 'ar' ? p.descriptionAr : p.descriptionEn}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-gray-100/10 pt-4">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 block">{lang === 'ar' ? 'السعر' : 'Price'}</span>
-                        <span className="text-lg font-bold text-rose-600">{p.price.toFixed(2)} {tenant.currencyEn}</span>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1 text-xs text-gray-400 font-bold">
-                          <Flame className="w-3.5 h-3.5 text-amber-500" />
-                          {p.calories} Cal
-                        </span>
-                        <span className="product-add-button p-2 rounded-full transition">
-                          <Plus className="w-4 h-4" />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="relative">
+              <Search className={`absolute top-4 left-4 w-4.5 h-4.5 transition-colors duration-300 ${searchQuery ? 'text-rose-500' : 'text-gray-400'}`} />
+              <input 
+                ref={searchInputRef}
+                type="text"
+                placeholder={lang === 'ar' ? placeholdersAr[placeholderIndex] : placeholdersEn[placeholderIndex]}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full py-3.5 pl-11 pr-16 text-sm rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-rose-500/50 ${
+                  darkMode 
+                    ? 'bg-gray-900/90 border-gray-800 text-gray-100 placeholder-gray-500 focus:border-rose-500' 
+                    : 'bg-white/95 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-rose-500 shadow-sm'
+                }`}
+              />
+              
+              {/* Keyboard Shortcut Indicator & Clear Button */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {searchQuery ? (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    title={lang === 'ar' ? 'مسح البحث' : 'Clear search'}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[9px] font-black text-gray-400 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200/80 dark:border-gray-700/80 leading-none">
+                    <span>⌘</span>
+                    <span>K</span>
+                  </kbd>
+                )}
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Categories Section (Sticky Tab Roller + Layout Mode) */}
-        <div id="menu" className="space-y-4 scroll-mt-20">
           
-          {/* Header of Section */}
-          <div className="flex items-center justify-between border-b border-gray-100/10 pb-2">
-            <h3 className="font-bold tracking-tight text-base">
-              {lang === 'ar' ? 'تصفح قائمة الطعام' : 'Browse Main Menu'}
-            </h3>
-            <span className="text-xs text-gray-400">
-              {tenantProducts.length} {lang === 'ar' ? 'وجبة متاحة' : 'items available'}
-            </span>
+          {/* Creative suggestion tags / chips under search input */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold text-gray-400 dark:text-gray-500 transition-all duration-300">
+            <span>{lang === 'ar' ? 'بحث سريع:' : 'Quick search:'}</span>
+            {['ستيك 🥩', 'كباب 🍢', 'لحوم 🔥', 'مقبلات 🍟', 'سلطة 🥗', 'كرات اللحم 🧆'].map(tag => {
+              const term = tag.split(' ')[0]; // extract steak/kebab/meat/salad
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setSearchQuery(term)}
+                  className="px-2.5 py-1 rounded-full border border-gray-200/60 dark:border-gray-800/80 bg-white/40 dark:bg-gray-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:border-rose-300 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-300 cursor-pointer"
+                >
+                  {tag}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Premium Sticky Category Showcase */}
-          <div className={`sticky top-0 z-50 -mx-4 border-y px-4 py-3 shadow-xl shadow-black/10 backdrop-blur-2xl transition-all duration-300 sm:mx-0 sm:rounded-[2rem] sm:border sm:px-5 ${
-            darkMode 
-              ? 'bg-gray-950/90 border-white/10' 
-              : 'bg-white/90 border-gray-200/80'
-          }`}>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-gray-400">
-                  {lang === 'ar' ? 'الفئات' : 'Categories'}
-                </p>
-                <h4 className="truncate text-sm font-black text-gray-950 dark:text-white">
-                  {lang === 'ar' ? 'اسحب واختار القسم' : 'Swipe and choose'}
-                </h4>
-              </div>
-              <div className="flex items-center gap-1 rounded-2xl border border-gray-200/70 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <button 
-                  onClick={() => setLayoutMode('grid')}
-                  className={`p-2 rounded-xl transition ${
-                    layoutMode === 'grid' 
-                      ? 'bg-[var(--tenant-primary)] text-white shadow-lg shadow-rose-500/25' 
-                      : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                  title={lang === 'ar' ? 'عرض شبكي' : 'Grid View'}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => setLayoutMode('list')}
-                  className={`p-2 rounded-xl transition ${
-                    layoutMode === 'list' 
-                      ? 'bg-[var(--tenant-primary)] text-white shadow-lg shadow-rose-500/25' 
-                      : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                  title={lang === 'ar' ? 'عرض طولي مضغوط' : 'List View'}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
+          {/* Search Result Count Indicator */}
+          {searchQuery && (
+            <div className="text-center text-xs font-semibold text-rose-500 animate-fade-in flex items-center justify-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+              <span>
+                {lang === 'ar' 
+                  ? `تم العثور على ${tenantProducts.length} منتجات مطابقة` 
+                  : `Found ${tenantProducts.length} matching items`}
+              </span>
             </div>
-
-            <div
-              dir="ltr"
-              className="category-scroller flex flex-row-reverse snap-x items-stretch gap-3 overflow-x-auto overscroll-x-contain pb-2"
-            >
+          )}
+        </div>
+        {/* Two-Column Sidebar Layout */}
+        <div className="flex flex-row gap-4 md:gap-6 items-start relative select-none">
+          
+          {/* Categories Sidebar */}
+          <aside className="w-20 sm:w-24 md:w-64 shrink-0 sticky top-[78px] z-30 max-h-[calc(100vh-100px)] overflow-y-auto no-scrollbar space-y-4">
+            
+            {/* Desktop Sidebar Title */}
+            <div className="hidden md:block px-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400">
+                {lang === 'ar' ? 'الفئات' : 'Categories'}
+              </p>
+              <h4 className="text-sm font-black text-rose-600 dark:text-rose-400 mt-0.5">
+                {lang === 'ar' ? 'اسحب واختار القسم' : 'Choose Category'}
+              </h4>
+            </div>
+            
+            {/* Categories container */}
+            <div className="flex flex-col gap-2.5">
+              
+              {/* All Items Button */}
               <button
-                dir={lang === 'ar' ? 'rtl' : 'ltr'}
                 onClick={() => handleCategorySelect('all')}
-                className={`category-pill group relative min-w-[108px] snap-start overflow-hidden rounded-[1.6rem] border p-3 text-center transition-all duration-500 ${
+                className={`group relative rounded-2xl border p-2 md:p-3 text-center md:text-right transition-all duration-300 flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full cursor-pointer ${
                   selectedCategory === 'all'
-                    ? 'scale-[1.03] border-transparent bg-gradient-to-br from-rose-600 to-red-800 text-white shadow-2xl shadow-rose-500/30'
+                    ? 'border-transparent bg-gradient-to-br from-rose-600 to-red-800 text-white shadow-lg shadow-rose-500/25'
                     : darkMode 
                       ? 'border-white/10 bg-gray-900/80 text-gray-200 hover:border-rose-500/50' 
-                      : 'border-gray-200 bg-white text-gray-900 hover:border-rose-200 hover:shadow-xl'
+                      : 'border-gray-200 bg-white text-gray-900 hover:border-rose-200 hover:shadow-md'
                 }`}
               >
-                <div className={`absolute inset-0 opacity-0 transition group-hover:opacity-100 ${selectedCategory === 'all' ? 'opacity-100' : ''} bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.32),transparent_36%)]`} />
-                <div className={`relative mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-3xl text-3xl shadow-xl transition duration-500 group-hover:-translate-y-1 group-hover:rotate-3 ${
+                <div className={`flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-xl text-lg md:text-xl transition duration-300 ${
                   selectedCategory === 'all'
-                    ? 'bg-white/20 shadow-black/20'
-                    : 'bg-gradient-to-br from-rose-500 to-red-800 text-white shadow-rose-500/25'
+                    ? 'bg-white/20'
+                    : 'bg-rose-500/10 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400'
                 }`}>
                   🍽️
                 </div>
-                <span className="relative block text-sm font-black leading-tight">
-                  {lang === 'ar' ? 'كل الوجبات' : 'All Items'}
-                </span>
-                <span className={`relative mt-1 block text-[10px] font-bold ${selectedCategory === 'all' ? 'text-white/75' : 'text-gray-400'}`}>
-                  {products.filter(p => p.tenantId === tenant.id && p.isVisible).length} {lang === 'ar' ? 'صنف' : 'items'}
-                </span>
+                <div className="min-w-0 md:text-right">
+                  <span className="block text-[10px] md:text-xs font-black truncate w-full md:w-auto">
+                    {lang === 'ar' ? 'كل الوجبات' : 'All Items'}
+                  </span>
+                  <span className={`hidden md:block text-[9px] font-bold ${selectedCategory === 'all' ? 'text-white/75' : 'text-gray-400'}`}>
+                    {products.filter(p => p.tenantId === tenant.id && p.isVisible).length} {lang === 'ar' ? 'صنف' : 'items'}
+                  </span>
+                </div>
               </button>
 
+              {/* Dynamic Categories Map */}
               {tenantCategories.map(c => {
                 const visual = getCategoryVisual(c);
                 const isSelected = selectedCategory === c.id;
@@ -794,154 +829,88 @@ export default function DigitalMenu({
                 return (
                   <button
                     key={c.id}
-                    dir={lang === 'ar' ? 'rtl' : 'ltr'}
                     onClick={() => handleCategorySelect(c.id)}
-                    className={`category-pill group relative min-w-[108px] snap-start overflow-hidden rounded-[1.6rem] border p-3 text-center transition-all duration-500 ${
+                    className={`group relative rounded-2xl border p-2 md:p-3 text-center md:text-right transition-all duration-300 flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full cursor-pointer ${
                       isSelected
-                        ? `scale-[1.03] border-transparent bg-gradient-to-br ${visual.glow} text-white shadow-2xl ${visual.ring}`
+                        ? `border-transparent bg-gradient-to-br ${visual.glow} text-white shadow-lg ${visual.ring}`
                         : darkMode 
                           ? 'border-white/10 bg-gray-900/80 text-gray-200 hover:border-rose-500/50' 
-                          : 'border-gray-200 bg-white text-gray-900 hover:border-rose-200 hover:shadow-xl'
+                          : 'border-gray-200 bg-white text-gray-900 hover:border-rose-200 hover:shadow-md'
                     }`}
                   >
-                    <div className={`absolute inset-0 opacity-0 transition group-hover:opacity-100 ${isSelected ? 'opacity-100' : ''} bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.32),transparent_36%)]`} />
-                    <div className={`relative mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-3xl text-3xl shadow-xl transition duration-500 group-hover:-translate-y-1 group-hover:rotate-3 ${
-                      isSelected
-                        ? 'bg-white/20 shadow-black/20'
-                        : `bg-gradient-to-br ${visual.glow} text-white ${visual.ring}`
+                    <div className={`flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-xl text-lg md:text-xl transition duration-300 ${
+                      isSelected ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-800'
                     }`}>
                       {visual.icon}
                     </div>
-                    <span className="relative block min-h-[34px] text-sm font-black leading-tight line-clamp-2">
-                      {lang === 'ar' ? c.nameAr : c.nameEn}
-                    </span>
-                    <span className={`relative mt-1 block text-[10px] font-bold ${isSelected ? 'text-white/75' : 'text-gray-400'}`}>
-                      {productCountByCategory[c.id] || 0} {lang === 'ar' ? 'صنف' : 'items'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Sticky Tab Switcher & Layout Toggle */}
-          <div className={`hidden sticky top-[69px] z-30 py-3 transition-colors duration-300 border-b items-center justify-between gap-4 -mx-4 px-4 sm:mx-0 sm:px-0 ${
-            darkMode 
-              ? 'bg-gray-950/95 border-gray-800 backdrop-blur-md' 
-              : 'bg-white/95 border-gray-150 backdrop-blur-md'
-          }`}>
-            {/* Horizontal Categories Roller */}
-            <div className="flex items-center gap-3.5 overflow-x-auto no-scrollbar flex-1 py-1">
-              {/* ALL ITEMS */}
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className="flex flex-col items-center gap-1 focus:outline-none flex-shrink-0 cursor-pointer group"
-              >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-xs transition-all duration-300 transform group-hover:scale-105 border ${
-                  selectedCategory === 'all'
-                    ? 'bg-[var(--tenant-primary)] text-white border-transparent ring-2 ring-[var(--tenant-primary)] ring-offset-2 dark:ring-offset-gray-950'
-                    : darkMode 
-                      ? 'bg-gray-900 border-gray-800 text-gray-300 hover:border-gray-700' 
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-[var(--tenant-primary)]'
-                }`}>
-                  🍽️
-                </div>
-                <span className={`text-[9px] font-bold tracking-tight transition ${
-                  selectedCategory === 'all' ? 'text-[var(--tenant-primary)]' : 'text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white'
-                }`}>
-                  {lang === 'ar' ? 'كل الوجبات' : 'All Items'}
-                </span>
-              </button>
-
-              {/* DYNAMIC CATEGORIES */}
-              {tenantCategories.map(c => {
-                const nameLower = c.nameEn.toLowerCase();
-                let emoji = '🍕';
-                if (nameLower.includes('pizza')) emoji = '🍕';
-                else if (nameLower.includes('burger') || nameLower.includes('sandwich')) emoji = '🍔';
-                else if (nameLower.includes('drink') || nameLower.includes('beverage') || nameLower.includes('juice') || nameLower.includes('coffee') || nameLower.includes('tea')) emoji = '🍹';
-                else if (nameLower.includes('dessert') || nameLower.includes('sweet') || nameLower.includes('cake')) emoji = '🍰';
-                else if (nameLower.includes('pasta') || nameLower.includes('spaghetti')) emoji = '🍝';
-                else if (nameLower.includes('appetizer') || nameLower.includes('starter') || nameLower.includes('fry') || nameLower.includes('fries') || nameLower.includes('fryer')) emoji = '🍟';
-                else if (nameLower.includes('salad') || nameLower.includes('green')) emoji = '🥗';
-                else if (nameLower.includes('soup')) emoji = '🥣';
-                else if (nameLower.includes('meat') || nameLower.includes('grill') || nameLower.includes('steak')) emoji = '🥩';
-                else if (nameLower.includes('chicken')) emoji = '🍗';
-                
-                const isSelected = selectedCategory === c.id;
-
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedCategory(c.id)}
-                    className="flex flex-col items-center gap-1 focus:outline-none flex-shrink-0 cursor-pointer group"
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-xs transition-all duration-300 transform group-hover:scale-105 border ${
-                      isSelected
-                        ? 'bg-[var(--tenant-primary)] text-white border-transparent ring-2 ring-[var(--tenant-primary)] ring-offset-2 dark:ring-offset-gray-950'
-                        : darkMode 
-                          ? 'bg-gray-900 border-gray-800 text-gray-300 hover:border-gray-700' 
-                          : 'bg-white border-gray-200 text-gray-600 hover:border-[var(--tenant-primary)]'
-                    }`}>
-                      {emoji}
+                    <div className="min-w-0 md:text-right w-full">
+                      <span className="block text-[10px] md:text-xs font-black truncate w-full md:w-auto">
+                        {lang === 'ar' ? c.nameAr : c.nameEn}
+                      </span>
+                      <span className={`hidden md:block text-[9px] font-bold ${isSelected ? 'text-white/75' : 'text-gray-400'}`}>
+                        {productCountByCategory[c.id] || 0} {lang === 'ar' ? 'صنف' : 'items'}
+                      </span>
                     </div>
-                    <span className={`text-[9px] font-bold tracking-tight transition ${
-                      isSelected ? 'text-[var(--tenant-primary)]' : 'text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white'
-                    }`}>
-                      {lang === 'ar' ? c.nameAr : c.nameEn}
-                    </span>
                   </button>
                 );
               })}
+
+            </div>
+          </aside>
+
+          {/* Main Content Column */}
+          <div className="flex-1 min-w-0 space-y-6">
+            
+            {/* Products Grid Deck */}
+            <div className="flex items-center justify-between gap-3 rounded-3xl border border-gray-100 bg-white/80 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-gray-900/60">
+              <div className="text-right">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">
+                  {lang === 'ar' ? 'القسم الحالي' : 'Current Category'}
+                </p>
+                <h4 className="mt-1 text-base font-black text-gray-900 dark:text-white">
+                  {selectedCategoryInfo
+                    ? (lang === 'ar' ? selectedCategoryInfo.nameAr : selectedCategoryInfo.nameEn)
+                    : (lang === 'ar' ? 'كل الوجبات' : 'All Items')}
+                </h4>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <span className="rounded-full bg-rose-600 px-3 py-1 text-xs font-black text-white shadow-lg shadow-rose-500/20">
+                  {tenantProducts.length} {lang === 'ar' ? 'منتج' : 'items'}
+                </span>
+                
+                {/* View Switcher toggle */}
+                <div className="flex items-center gap-1 border rounded-xl p-1 bg-white dark:bg-gray-900 border-gray-200/50 dark:border-gray-800 shrink-0 shadow-xs">
+                  <button 
+                    onClick={() => setLayoutMode('grid')}
+                    className={`p-1.5 rounded-lg transition ${
+                      layoutMode === 'grid' 
+                        ? 'bg-[var(--tenant-primary)] text-white shadow-xs' 
+                        : 'text-gray-650 hover:text-gray-855'
+                    }`}
+                    title={lang === 'ar' ? 'عرض شبكي' : 'Grid View'}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={() => setLayoutMode('list')}
+                    className={`p-1.5 rounded-lg transition ${
+                      layoutMode === 'list' 
+                        ? 'bg-[var(--tenant-primary)] text-white shadow-xs' 
+                        : 'text-gray-650 hover:text-gray-855'
+                    }`}
+                    title={lang === 'ar' ? 'عرض طولي مضغوط' : 'List View'}
+                  >
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Layout view switcher (Grid vs List) */}
-            <div className="flex items-center gap-1 border rounded-xl p-1 bg-white dark:bg-gray-900 border-gray-200/50 dark:border-gray-800 shrink-0 shadow-xs">
-              <button 
-                onClick={() => setLayoutMode('grid')}
-                className={`p-1.5 rounded-lg transition ${
-                  layoutMode === 'grid' 
-                    ? 'bg-[var(--tenant-primary)] text-white' 
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
-                title={lang === 'ar' ? 'عرض شبكي' : 'Grid View'}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              <button 
-                onClick={() => setLayoutMode('list')}
-                className={`p-1.5 rounded-lg transition ${
-                  layoutMode === 'list' 
-                    ? 'bg-[var(--tenant-primary)] text-white' 
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
-                title={lang === 'ar' ? 'عرض طولي مضغوط' : 'List View'}
-              >
-                <List className="w-3.5 h-3.5" />
-              </button>
-            </div>
-        </div>
-
-        {/* Products Grid Deck */}
-        <div className="flex items-center justify-between gap-3 rounded-3xl border border-gray-100 bg-white/80 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-gray-900/60">
-          <div className="text-right">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">
-              {lang === 'ar' ? 'القسم الحالي' : 'Current Category'}
-            </p>
-            <h4 className="mt-1 text-lg font-black text-gray-950 dark:text-white">
-              {selectedCategoryInfo
-                ? (lang === 'ar' ? selectedCategoryInfo.nameAr : selectedCategoryInfo.nameEn)
-                : (lang === 'ar' ? 'كل الوجبات' : 'All Items')}
-            </h4>
-          </div>
-          <span className="rounded-full bg-rose-600 px-3 py-1.5 text-xs font-black text-white shadow-lg shadow-rose-500/20">
-            {tenantProducts.length} {lang === 'ar' ? 'منتج' : 'items'}
-          </span>
-        </div>
-
-        {layoutMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {tenantProducts.map(p => {
+            {/* Products Loop */}
+            {layoutMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                 {tenantProducts.map(p => {
               const isFav = favorites.includes(p.id);
               return (
                 <div 
@@ -996,10 +965,10 @@ export default function DigitalMenu({
                   <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-1.5 text-right">
                       <h4 className="product-title font-black text-lg sm:text-base transition">
-                        {lang === 'ar' ? p.nameAr : p.nameEn}
+                        {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
                       </h4>
                       <p className={`text-sm sm:text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {lang === 'ar' ? p.descriptionAr : p.descriptionEn}
+                        {highlightText(lang === 'ar' ? p.descriptionAr : p.descriptionEn, searchQuery)}
                       </p>
                     </div>
 
@@ -1008,11 +977,11 @@ export default function DigitalMenu({
                       <div>
                         {p.discountRate > 0 && (
                           <span className="text-[10px] line-through text-gray-400 block">
-                            {(p.price).toFixed(2)} {tenant.currencyEn}
+                            {(p.price).toFixed(2)} <SaudiRiyalIcon />
                           </span>
                         )}
                         <span className="text-lg sm:text-base font-black text-rose-600">
-                          {(p.price * (1 - p.discountRate)).toFixed(2)} {tenant.currencyEn}
+                          {(p.price * (1 - p.discountRate)).toFixed(2)} <SaudiRiyalIcon />
                         </span>
                       </div>
 
@@ -1032,11 +1001,10 @@ export default function DigitalMenu({
                 </div>
               );
             })}
-          </div>
-        ) : (
-          /* COMPACT LIST VIEW (Highly optimized for Mobile Screens!) */
-          <div className="flex flex-col gap-4">
-            {tenantProducts.map(p => {
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                 {tenantProducts.map(p => {
               const isFav = favorites.includes(p.id);
               return (
                 <div 
@@ -1067,7 +1035,7 @@ export default function DigitalMenu({
                   <div className="flex-1 min-w-0 space-y-1 text-right">
                     <div className="flex items-center gap-1.5">
                       <h4 className="product-title font-extrabold text-xs sm:text-sm transition truncate">
-                        {lang === 'ar' ? p.nameAr : p.nameEn}
+                        {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
                       </h4>
                       {p.isFeatured && (
                         <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-bold rounded">
@@ -1076,7 +1044,7 @@ export default function DigitalMenu({
                       )}
                     </div>
                     <p className={`text-[10px] sm:text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {lang === 'ar' ? p.descriptionAr : p.descriptionEn}
+                      {highlightText(lang === 'ar' ? p.descriptionAr : p.descriptionEn, searchQuery)}
                     </p>
                     
                     <div className="flex items-center gap-2 pt-1 font-bold">
@@ -1118,7 +1086,7 @@ export default function DigitalMenu({
                           </span>
                         )}
                         <span className="text-xs sm:text-sm font-black text-rose-600 block leading-none">
-                          {(p.price * (1 - p.discountRate)).toFixed(2)} <span className="text-[8px] font-bold">{lang === 'ar' ? tenant.currencyAr : tenant.currencyEn}</span>
+                          {(p.price * (1 - p.discountRate)).toFixed(2)} <span className="text-[8px] font-bold"><SaudiRiyalIcon /></span>
                         </span>
                       </div>
                       
@@ -1130,10 +1098,11 @@ export default function DigitalMenu({
                 </div>
               );
             })}
+              </div>
+            )}
+
           </div>
-        )}
-        </div>
-      </main>
+        </div>      </main>
 
       {/* Custom Premium Restaurant Website Footer */}
       <footer id="footer" className={`border-t transition-colors duration-300 ${
@@ -1392,7 +1361,7 @@ export default function DigitalMenu({
                           <span className="text-[10px] text-gray-400 mt-1">
                             {size.priceDifference === 0 
                               ? (lang === 'ar' ? 'السعر الأساسي' : 'Base Price') 
-                              : `+${size.priceDifference.toFixed(2)} ${tenant.currencyEn}`}
+                              : `+${size.priceDifference.toFixed(2)} $<SaudiRiyalIcon />`}
                           </span>
                         </div>
                       );
@@ -1444,7 +1413,7 @@ export default function DigitalMenu({
                             <span className="font-semibold text-xs">{lang === 'ar' ? mod.nameAr : mod.nameEn}</span>
                             <div className="flex items-center gap-2">
                               {mod.price > 0 && (
-                                <span className="text-[10px] font-bold text-rose-600">+{mod.price.toFixed(2)} {tenant.currencyEn}</span>
+                                <span className="text-[10px] font-bold text-rose-600">+{mod.price.toFixed(2)} <SaudiRiyalIcon /></span>
                               )}
                               <div className={`w-4 h-4 rounded flex items-center justify-center border ${
                                 isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-gray-300'
@@ -1515,7 +1484,7 @@ export default function DigitalMenu({
                 <ShoppingBag className="w-4 h-4" />
                 {lang === 'ar' ? 'إضافة للطلب' : 'Add to Order'}
                 <span>•</span>
-                <span>{calculatedDialogPrice.toFixed(2)} {tenant.currencyEn}</span>
+                <span>{calculatedDialogPrice.toFixed(2)} <SaudiRiyalIcon /></span>
               </button>
             </div>
 
@@ -1561,7 +1530,7 @@ export default function DigitalMenu({
                     <div className="flex-1 space-y-1">
                       <div className="flex items-start justify-between">
                         <h4 className="font-bold text-xs text-gray-900 dark:text-white">{lang === 'ar' ? item.product.nameAr : item.product.nameEn}</h4>
-                        <span className="font-bold text-rose-600 text-xs">{(item.pricePerItem * item.quantity).toFixed(2)} {tenant.currencyEn}</span>
+                        <span className="font-bold text-rose-600 text-xs">{(item.pricePerItem * item.quantity).toFixed(2)} <SaudiRiyalIcon /></span>
                       </div>
                       
                       {item.sizeName && (
@@ -1772,16 +1741,16 @@ export default function DigitalMenu({
                 <div className="space-y-1.5 text-xs text-right">
                   <div className="flex items-center justify-between text-gray-400">
                     <span>{lang === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                    <span>{cartSubtotal.toFixed(2)} {tenant.currencyEn}</span>
+                    <span>{cartSubtotal.toFixed(2)} <SaudiRiyalIcon /></span>
                   </div>
                   <div className="flex items-center justify-between text-gray-400">
                     <span>{lang === 'ar' ? `ضريبة القيمة المضافة (${tenant.id === 't-1' ? '١٥٪' : '٥٪'})` : `Tax / VAT (${tenant.id === 't-1' ? '15%' : '5%'})`}</span>
-                    <span>{taxAmount.toFixed(2)} {tenant.currencyEn}</span>
+                    <span>{taxAmount.toFixed(2)} <SaudiRiyalIcon /></span>
                   </div>
                   <div className="border-t border-gray-200/50 my-2" />
                   <div className="flex items-center justify-between font-black text-sm text-gray-900 dark:text-white">
                     <span>{lang === 'ar' ? 'المجموع النهائي' : 'Order Total'}</span>
-                    <span className="text-rose-600">{cartTotal.toFixed(2)} {tenant.currencyEn}</span>
+                    <span className="text-rose-600">{cartTotal.toFixed(2)} <SaudiRiyalIcon /></span>
                   </div>
                 </div>
 
@@ -1891,7 +1860,7 @@ export default function DigitalMenu({
             
             <div className="flex items-center gap-2 font-bold">
               <span className="opacity-50">|</span>
-              <span>{cartTotal.toFixed(2)} {lang === 'ar' ? tenant.currencyAr : tenant.currencyEn}</span>
+              <span>{cartTotal.toFixed(2)} <SaudiRiyalIcon /></span>
               <ShoppingBag className="w-4 h-4" />
             </div>
           </button>
