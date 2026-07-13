@@ -1126,19 +1126,19 @@ export default function DigitalMenu({
                 <h3 className="text-sm font-black tracking-tight text-gray-900 dark:text-white">
                   {lang === 'ar' ? tenant.nameAr : tenant.nameEn}
                 </h3>
-                <p className="text-[9px] text-gray-400 font-semibold">{lang === 'ar' ? 'أفضل جودة وخدمة ممتازة' : 'Premium Quality & Experience'}</p>
+                <p className="text-[9px] text-gray-400 font-semibold">{lang === 'ar' ? (tenant.sloganAr || 'أفضل جودة وخدمة ممتازة') : (tenant.sloganEn || 'Premium Quality & Experience')}</p>
               </div>
             </div>
             
             <p className="text-[10px] text-gray-400 leading-relaxed font-medium">
               {lang === 'ar' 
-                ? 'فخورون بتقديم أشهى المأكولات المعدة بحب وشغف طيلة أيام الأسبوع، مع خدمة سريعة وآمنة تماماً.'
-                : 'Proudly serving handcrafted meals prepared with fresh ingredients, with clean contact-free pickup & delivery.'}
+                ? (tenant.descAr || 'فخورون بتقديم أشهى المأكولات المعدة بحب وشغف طيلة أيام الأسبوع، مع خدمة سريعة وآمنة تماماً.')
+                : (tenant.descEn || 'Proudly serving handcrafted meals prepared with fresh ingredients, with clean contact-free pickup & delivery.')}
             </p>
 
             <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold">
               <Clock className="w-3.5 h-3.5 text-[var(--tenant-primary)]" />
-              <span>{lang === 'ar' ? 'ساعات العمل: ١٢ ظهراً - ١٢ ليلاً' : 'Opening Hours: 12 PM - 12 AM'}</span>
+              <span>{lang === 'ar' ? (tenant.hoursAr || 'ساعات العمل: ١٢ ظهراً - ١٢ ليلاً') : (tenant.hoursEn || 'Opening Hours: 12 PM - 12 AM')}</span>
             </div>
           </div>
 
@@ -1173,13 +1173,13 @@ export default function DigitalMenu({
             </h4>
             <p className="text-[10px] text-gray-400 font-medium">
               {lang === 'ar'
-                ? 'هل لديك أي استفسار أو ترغب في تقديم طلب خاص؟ تواصل معنا مباشرة:'
-                : 'Have any questions or special orders? Contact our support channels directly:'}
+                ? (tenant.supportAr || 'هل لديك أي استفسار أو ترغب في تقديم طلب خاص؟ تواصل معنا مباشرة:')
+                : (tenant.supportEn || 'Have any questions or special orders? Contact our support channels directly:')}
             </p>
             <div className="space-y-2.5">
               {/* WhatsApp Button */}
               <a 
-                href={`https://wa.me/${tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : '966500000000'}`}
+                href={`https://wa.me/${tenant.whatsappNumber ? tenant.whatsappNumber.replace(/[^0-9]/g, '') : (tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : '966500000000')}`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-550/10 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black transition border border-emerald-500/20"
@@ -1207,13 +1207,13 @@ export default function DigitalMenu({
             </h4>
             <p className="text-[10px] text-gray-400 font-medium">
               {lang === 'ar'
-                ? 'ابقَ على اطلاع بأحدث عروضنا الموسمية وأطباقنا الجديدة وخصوماتنا الحصرية.'
-                : 'Stay tuned for seasonal discounts, new menu arrivals, and exclusive promos.'}
+                ? (tenant.socialAr || 'ابقَ على اطلاع بأحدث عروضنا الموسمية وأطباقنا الجديدة وخصوماتنا الحصرية.')
+                : (tenant.socialEn || 'Stay tuned for seasonal discounts, new menu arrivals, and exclusive promos.')}
             </p>
             <div className="flex items-center gap-2.5 flex-wrap">
               {/* Instagram */}
               <a 
-                href={`https://instagram.com/${tenant.slug}`} 
+                href={tenant.instagramUrl || `https://instagram.com/${tenant.slug}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 flex items-center justify-center hover:bg-rose-600 hover:text-white transition shadow-sm border border-rose-100/10"
@@ -1223,7 +1223,7 @@ export default function DigitalMenu({
               </a>
               {/* Facebook */}
               <a 
-                href={`https://facebook.com/${tenant.slug}`}
+                href={tenant.facebookUrl || `https://facebook.com/${tenant.slug}`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition shadow-sm border border-blue-100/10"
@@ -1233,7 +1233,7 @@ export default function DigitalMenu({
               </a>
               {/* WhatsApp Icon for channel */}
               <a 
-                href={`https://wa.me/${tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : '966500000000'}`}
+                href={`https://wa.me/${tenant.whatsappNumber ? tenant.whatsappNumber.replace(/[^0-9]/g, '') : (tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : '966500000000')}`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition shadow-sm border border-emerald-100/10"
@@ -1243,7 +1243,7 @@ export default function DigitalMenu({
               </a>
               {/* Twitter / X */}
               <a 
-                href={`https://twitter.com/${tenant.slug}`}
+                href={tenant.twitterUrl || `https://x.com/${tenant.slug}`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-200 flex items-center justify-center hover:bg-slate-650 hover:text-white transition shadow-sm border border-slate-100/10"
@@ -1254,7 +1254,7 @@ export default function DigitalMenu({
             </div>
             <div className="pt-2 text-[9px] text-gray-500 font-mono">
               <span>{lang === 'ar' ? 'المعرف الرسمي:' : 'Branded Handle:'}</span>
-              <span className="block font-bold text-gray-450">@{tenant.slug}.restaurant</span>
+              <span className="block font-bold text-gray-450">{tenant.handle || `@${tenant.slug}.restaurant`}</span>
             </div>
           </div>
 
@@ -1266,7 +1266,7 @@ export default function DigitalMenu({
         }`}>
           <p>
             {lang === 'ar'
-              ? `جميع الحقوق محفوظة © ٢٠٢٦ للمطعم الفاخر ${tenant.nameAr}. مدعوم بواسطة نظام فوديكس SaaS.`
+              ? `جميع الحقوق محفوظة © ٢٠٢٦ لـ ${tenant.nameAr}. مدعوم بواسطة نظام فوديكس SaaS.`
               : `All Rights Reserved © 2026 for ${tenant.nameEn}. Powered by Foodics SaaS Monolith System.`}
           </p>
           <a

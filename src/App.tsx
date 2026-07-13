@@ -19,9 +19,8 @@ import {
 const normalizeMeatportTenants = (savedTenants?: Tenant[]): Tenant[] => {
   const savedMeatport = savedTenants?.find(t => t.id === 't-1');
   return [{
-    ...savedMeatport,
     ...initialTenants[0],
-    enableDelivery: savedMeatport?.enableDelivery ?? initialTenants[0].enableDelivery
+    ...savedMeatport
   }];
 };
 
@@ -49,7 +48,14 @@ export default function App() {
     localStorage.setItem(`saas_tenants`, JSON.stringify(normalized));
   }, [tenants]);
 
-  const [branches] = useState<Branch[]>(initialBranches);
+  const [branches, setBranches] = useState<Branch[]>(() => {
+    const saved = localStorage.getItem(`saas_branches`);
+    return saved ? JSON.parse(saved) : initialBranches;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(`saas_branches`, JSON.stringify(branches));
+  }, [branches]);
 
   const selectedTenantId: string = 't-1';
   const initialTenantId = 't-1';
@@ -550,6 +556,33 @@ export default function App() {
             onPlaceOrder={placeOrder}
           />
         </div>
+      ) : currentView === 'admin' && activeStaff !== null && activeStaff.role === 'manager' ? (
+        <AdminDashboard 
+          tenant={activeTenant}
+          setTenants={setTenants}
+          branches={activeTenantBranches}
+          setBranches={setBranches}
+          products={products}
+          categories={categories}
+          modifierGroups={modifierGroups}
+          auditLogs={auditLogs}
+          setProducts={setProducts}
+          setCategories={setCategories}
+          addAuditLog={addAuditLog}
+          lang={lang}
+          ingredients={ingredients}
+          setIngredients={setIngredients}
+          recipes={recipes}
+          orders={orders}
+          setOrders={setOrders}
+          orderItems={orderItems}
+          currentPath={currentPath}
+          navigateTo={navigateTo}
+          activeStaff={activeStaff}
+          onLogout={handleLogout}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+        />
       ) : (
         <>
           {/* Main Workspace Body */}

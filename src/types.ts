@@ -16,6 +16,27 @@ export interface Tenant {
   plan?: 'free' | 'basic' | 'premium' | 'enterprise';
   status?: 'active' | 'suspended' | 'expired';
   enableDelivery?: boolean;
+  secondaryColor?: string;
+  darkMode?: boolean;
+  showLogoInHeader?: boolean;
+  showLogoInFooter?: boolean;
+  sloganAr?: string;
+  sloganEn?: string;
+  descAr?: string;
+  descEn?: string;
+  hoursAr?: string;
+  hoursEn?: string;
+  supportAr?: string;
+  supportEn?: string;
+  socialAr?: string;
+  socialEn?: string;
+  handle?: string;
+  copyrightAr?: string;
+  copyrightEn?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  whatsappNumber?: string;
 }
 
 export interface Branch {

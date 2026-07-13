@@ -27,6 +27,11 @@ interface AdminDashboardProps {
   orderItems: OrderItem[];
   currentPath: string;
   navigateTo: (path: string) => void;
+  activeStaff?: any;
+  onLogout?: () => void;
+  darkMode?: boolean;
+  setDarkMode?: (dark: boolean) => void;
+  setBranches?: React.Dispatch<React.SetStateAction<Branch[]>>;
 }
 
 export default function AdminDashboard({
@@ -48,7 +53,12 @@ export default function AdminDashboard({
   setOrders,
   orderItems,
   currentPath,
-  navigateTo
+  navigateTo,
+  activeStaff,
+  onLogout,
+  darkMode,
+  setDarkMode,
+  setBranches
 }: AdminDashboardProps) {
   // Dynamically calculate the active tab from the URL pathname
   const activeTab = (() => {
@@ -287,6 +297,7 @@ export default function AdminDashboard({
 
   // Media Gallery / Image Library states
   const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [galleryTarget, setGalleryTarget] = useState<'product' | 'category' | 'logo' | null>(null);
   const [gallerySearch, setGallerySearch] = useState('');
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(false);
@@ -330,6 +341,60 @@ export default function AdminDashboard({
         if (data.success) {
           setProdImageUrl(data.url);
           setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
+        } else {
+          alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
+        }
+      } catch (err) {
+        alert(lang === 'ar' ? 'خطأ أثناء الرفع' : 'Error uploading image');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCategoryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Data = event.target?.result as string;
+      try {
+        const res = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: file.name, base64Data })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setCatImageUrl(data.url);
+          setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
+        } else {
+          alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
+        }
+      } catch (err) {
+        alert(lang === 'ar' ? 'خطأ أثناء الرفع' : 'Error uploading image');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Data = event.target?.result as string;
+      try {
+        const res = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: file.name, base64Data })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
+          if (setTenants) {
+            setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: data.url } : t));
+          }
         } else {
           alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
         }
@@ -765,215 +830,282 @@ export default function AdminDashboard({
   };
 
   return (
-    <div className="space-y-6 text-gray-800 font-sans" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="flex flex-row h-screen w-screen overflow-hidden text-gray-800 dark:text-gray-100 font-sans bg-gray-50/50 dark:bg-gray-950" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        :root {
+          --tenant-primary: ${tenant.primaryColor || '#e11d48'};
+          --tenant-secondary: ${tenant.secondaryColor || '#fb7185'};
+        }
+        .text-rose-600 { color: var(--tenant-primary) !important; }
+        .text-rose-500 { color: var(--tenant-primary) !important; }
+        .bg-rose-600 { background-color: var(--tenant-primary) !important; }
+        .bg-rose-500 { background-color: var(--tenant-primary) !important; }
+        .border-rose-600 { border-color: var(--tenant-primary) !important; }
+        .border-rose-500 { border-color: var(--tenant-primary) !important; }
+        .bg-rose-50 { background-color: var(--tenant-primary)1a !important; }
+        .hover\\:bg-rose-700:hover { background-color: var(--tenant-primary) !important; filter: brightness(0.9); }
+        .bg-rose-100 { background-color: var(--tenant-primary)20 !important; }
+      ` }} />
       
-      {/* Title Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-100 pb-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
-            <Settings className="w-6 h-6 text-rose-600 animate-spin-slow" />
-            {lang === 'ar' ? 'بوابة إدارة كتالوج القائمة' : 'Menu Catalog Administration Portal'}
-          </h1>
-          <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            {lang === 'ar' ? `المستأجر النشط: ${tenant.nameAr}` : `Active SaaS Tenant: ${tenant.nameEn}`}
-            <span className="text-gray-300">|</span>
-            {lang === 'ar' ? 'الموقع: الرياض العليا' : 'HQ Store Node: Riyadh Main'}
-          </p>
-        </div>
+      {/* Sidebar: Fixed, full height */}
+      <aside className="w-72 h-screen shrink-0 bg-white dark:bg-gray-900 flex flex-col justify-between p-6 shadow-2xl z-10 select-none">
+        <div className="space-y-6 overflow-y-auto no-scrollbar">
+          {/* Logo & Brand title */}
+          <div className="flex items-center gap-3 pb-4 mb-2">
+            {tenant.logoUrl ? (
+              <img src={tenant.logoUrl} alt={tenant.nameEn} className="w-10 h-10 rounded-xl object-cover bg-white shadow-xs border border-gray-100" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-rose-600/10 text-rose-600 flex items-center justify-center font-black text-lg">
+                MP
+              </div>
+            )}
+            <div>
+              <h1 className="text-sm font-black text-gray-955 dark:text-white leading-none">
+                {lang === 'ar' ? tenant.nameAr : tenant.nameEn}
+              </h1>
+              <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">
+                {lang === 'ar' ? 'لوحة الإدارة والمستودعات' : 'Enterprise Control Panel'}
+              </span>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-2">
-          {/* Export / Import Buttons */}
-          <button 
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition shadow-sm text-gray-700"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {lang === 'ar' ? 'تصدير CSV' : 'Export CSV'}
-          </button>
-          
-          <button 
-            onClick={handleImportCSVClick}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition shadow-sm text-gray-700"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            {lang === 'ar' ? 'استيراد CSV' : 'Import CSV'}
-          </button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleImportCSVFile} 
-            accept=".csv" 
-            className="hidden" 
-          />
-
-          <button 
-            onClick={() => activeTab === 'products' ? openProductModal() : openCategoryModal()}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            {activeTab === 'products' 
-              ? (lang === 'ar' ? 'إضافة منتج' : 'Add Product') 
-              : (lang === 'ar' ? 'إضافة فئة' : 'Add Category')}
-          </button>
-        </div>
-      </div>
-
-      {/* Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-rose-50 text-rose-600 rounded-lg">
-            <Package className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
-              {lang === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}
-            </span>
-            <span className="text-xl font-bold text-gray-900">{metrics.totalCount}</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-            <Layers className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
-              {lang === 'ar' ? 'إجمالي الفئات' : 'Total Categories'}
-            </span>
-            <span className="text-xl font-bold text-gray-900">{metrics.totalCategories}</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
-              {lang === 'ar' ? 'متوسط الربح' : 'Avg. Margin'}
-            </span>
-            <span className="text-xl font-bold text-gray-900">{metrics.avgMargin.toFixed(1)}%</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
-            <AlertTriangle className="w-5 h-5 animate-bounce-slow" />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
-              {lang === 'ar' ? 'نقص المخزون' : 'Stock Alerts'}
-            </span>
-            <span className="text-xl font-bold text-gray-900">{metrics.lowStockCount}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Sidebar Layout Grid Container */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-        
-        {/* Sidebar Panel (Col 3) */}
-        <aside className="md:col-span-3 bg-white dark:bg-gray-905 border border-gray-150 dark:border-gray-800 rounded-3xl p-5 shadow-xs space-y-4">
-          <div className="border-b border-gray-100/10 pb-2.5">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 font-mono">
+          {/* Nav menu links */}
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 font-mono block px-2 mb-2">
               {lang === 'ar' ? 'أقسام لوحة التحكم' : 'Console Modules'}
             </span>
+            <nav className="space-y-1">
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
+                  activeTab === 'products'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Package className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'إدارة المنتجات' : 'Products Grid'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('categories')}
+                className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
+                  activeTab === 'categories'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'إدارة الفئات' : 'Categories Deck'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('inventory')}
+                className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
+                  activeTab === 'inventory'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Warehouse className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'إدارة المخازن' : 'Inventory & Stocks'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('kitchen_analytics')}
+                className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
+                  activeTab === 'kitchen_analytics'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                }`}
+              >
+                <ChefHat className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'تحليلات ومخازن المطبخ' : 'Kitchen Operations'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('hr')}
+                className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
+                  activeTab === 'hr'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'شؤون الموظفين (HR)' : 'HR & Roster'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('logs')}
+                className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
+                  activeTab === 'logs'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'سجل العمليات والتدقيق' : 'Tenant Logs'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Settings className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'إعدادات النظام العامة' : 'General Settings'}</span>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Sidebar Footer: Active Session / Logout */}
+        <div className="pt-4 space-y-3">
+          {activeStaff && (
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center font-bold text-xs">
+                M
+              </div>
+              <div className="min-w-0 text-right">
+                <span className="block text-[11px] font-black text-gray-900 dark:text-white truncate">
+                  {activeStaff.name}
+                </span>
+                <span className="block text-[9px] text-gray-400 truncate">
+                  {lang === 'ar' ? 'مدير معتمد' : 'Manager'}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              type="button"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50/60 dark:bg-red-950/10 hover:bg-red-100 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 font-black rounded-xl text-[10px] transition cursor-pointer"
+            >
+              <span>🚪</span>
+              {lang === 'ar' ? 'تسجيل الخروج' : 'Log Out'}
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 h-screen flex flex-col overflow-hidden bg-gray-50/30 dark:bg-gray-950/30">
+        
+        {/* Top Navbar Header */}
+        <header className="h-16 shrink-0 bg-white dark:bg-gray-900 px-8 flex items-center justify-between shadow-md z-10">
+          <div>
+            <h1 className="text-sm font-black text-gray-950 dark:text-white flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+              {lang === 'ar' ? 'بوابة إدارة كتالوج القائمة' : 'Menu Catalog Administration Portal'}
+            </h1>
+            <p className="text-[10px] text-gray-400 font-bold mt-0.5">
+              {lang === 'ar' ? `المستأجر النشط: ${tenant.nameAr}` : `Active SaaS Tenant: ${tenant.nameEn}`}
+            </p>
           </div>
 
-          <nav className="flex flex-col space-y-1.5">
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
-                activeTab === 'products'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
-              }`}
+          <div className="flex items-center gap-2">
+            {/* Export / Import Buttons */}
+            <button 
+              onClick={handleExportCSV}
+              type="button"
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm text-gray-700 dark:text-gray-202 cursor-pointer animate-in fade-in"
             >
-              <Package className="w-4 h-4" />
-              <span>{lang === 'ar' ? 'إدارة المنتجات' : 'Products Grid'}</span>
+              <Download className="w-3.5 h-3.5" />
+              {lang === 'ar' ? 'تصدير CSV' : 'Export CSV'}
             </button>
-
-            <button
-              onClick={() => setActiveTab('categories')}
-              className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
-                activeTab === 'categories'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
-              }`}
+            
+            <button 
+              onClick={handleImportCSVClick}
+              type="button"
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm text-gray-700 dark:text-gray-202 cursor-pointer animate-in fade-in"
             >
-              <Layers className="w-4 h-4" />
-              <span>{lang === 'ar' ? 'إدارة الفئات' : 'Categories Deck'}</span>
+              <Upload className="w-3.5 h-3.5" />
+              {lang === 'ar' ? 'استيراد CSV' : 'Import CSV'}
             </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleImportCSVFile} 
+              accept=".csv" 
+              className="hidden" 
+            />
 
-            <button
-              onClick={() => setActiveTab('inventory')}
-              className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
-                activeTab === 'inventory'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
-              }`}
+            <button 
+              onClick={() => activeTab === 'products' ? openProductModal() : openCategoryModal()}
+              type="button"
+              className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition shadow-sm cursor-pointer"
             >
-              <Warehouse className="w-4 h-4" />
-              <span>{lang === 'ar' ? 'إدارة المخازن' : 'Inventory & Stocks'}</span>
+              <Plus className="w-4 h-4" />
+              {activeTab === 'products' 
+                ? (lang === 'ar' ? 'إضافة منتج' : 'Add Product') 
+                : (lang === 'ar' ? 'إضافة فئة' : 'Add Category')}
             </button>
+          </div>
+        </header>
 
-            <button
-              onClick={() => setActiveTab('kitchen_analytics')}
-              className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
-                activeTab === 'kitchen_analytics'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
-              }`}
-            >
-              <ChefHat className="w-4 h-4" />
-              <span>{lang === 'ar' ? 'تحليلات ومخازن المطبخ' : 'Kitchen Operations'}</span>
-            </button>
+        {/* Scrollable Content Pane */}
+        <main className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar">
+          
+          {/* Metrics Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-gray-900 p-5 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] flex items-center gap-4">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg">
+                <Package className="w-5 h-5" />
+              </div>
+              <div className="text-right">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                  {lang === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}
+                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">{metrics.totalCount}</span>
+              </div>
+            </div>
 
-            <button
-              onClick={() => setActiveTab('hr')}
-              className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
-                activeTab === 'hr'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              <span>{lang === 'ar' ? 'شؤون الموظفين (HR)' : 'HR & Roster'}</span>
-            </button>
+            <div className="bg-white dark:bg-gray-900 p-5 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] flex items-center gap-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 rounded-lg">
+                <Layers className="w-5 h-5" />
+              </div>
+              <div className="text-right">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                  {lang === 'ar' ? 'إجمالي الفئات' : 'Total Categories'}
+                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">{metrics.totalCategories}</span>
+              </div>
+            </div>
 
-            <button
-              onClick={() => setActiveTab('logs')}
-              className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
-                activeTab === 'logs'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
-              }`}
-            >
-              <Activity className="w-4 h-4" />
-              <span>{lang === 'ar' ? 'سجل العمليات والتدقيق' : 'Tenant Logs'}</span>
-            </button>
+            <div className="bg-white dark:bg-gray-900 p-5 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] flex items-center gap-4">
+              <div className="p-3 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-lg">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div className="text-right">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                  {lang === 'ar' ? 'متوسط الربح' : 'Avg. Margin'}
+                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">{metrics.avgMargin.toFixed(1)}%</span>
+              </div>
+            </div>
 
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 ${
-                activeTab === 'settings'
-                  ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>{lang === 'ar' ? 'إعدادات النظام العامة' : 'General Settings'}</span>
-            </button>
-          </nav>
-        </aside>
+            <div className="bg-white dark:bg-gray-900 p-5 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] flex items-center gap-4">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-lg">
+                <AlertTriangle className="w-5 h-5 animate-bounce-slow" />
+              </div>
+              <div className="text-right">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                  {lang === 'ar' ? 'نقص المخزون' : 'Stock Alerts'}
+                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">{metrics.lowStockCount}</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Main Tab Content Panel (Col 9) */}
-        <main className="md:col-span-9 space-y-6">
       {activeTab === 'products' && (
         <div className="space-y-4">
           {/* Table Utilities */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white p-4 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)]">
             <div className="flex items-center gap-2 w-full md:max-w-md">
               <input 
                 type="text"
@@ -1033,7 +1165,7 @@ export default function AdminDashboard({
           </div>
 
           {/* Products Table */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-gray-500">
                 <thead className="bg-gray-50/70 text-[11px] uppercase text-gray-400 font-semibold border-b border-gray-100">
@@ -1183,7 +1315,7 @@ export default function AdminDashboard({
 
       {activeTab === 'categories' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-gray-500">
                 <thead className="bg-gray-50/70 text-[11px] uppercase text-gray-400 font-semibold border-b border-gray-100">
@@ -1268,7 +1400,7 @@ export default function AdminDashboard({
 
       {activeTab === 'logs' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-6">
+          <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] overflow-hidden p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-rose-600" />
@@ -1364,7 +1496,7 @@ export default function AdminDashboard({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* LEFT PANEL: INVENTORY ITEMS DIRECTORY (Col 2) */}
-            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="lg:col-span-2 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] overflow-hidden">
               <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/40">
                 <h3 className="font-bold text-xs text-gray-900 flex items-center gap-1.5 uppercase">
                   <Warehouse className="w-4 h-4 text-rose-600" />
@@ -1427,7 +1559,7 @@ export default function AdminDashboard({
             </div>
 
             {/* RIGHT PANEL: SUPPLY ORDER REFILL (Col 1) */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+            <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-5 space-y-4">
               <h3 className="font-bold text-xs text-gray-900 flex items-center gap-1.5 uppercase border-b pb-2">
                 <Plus className="w-4 h-4 text-emerald-500" />
                 {lang === 'ar' ? 'أمر توريد مخزني سريع' : 'Quick Stock Supply Inflow'}
@@ -1561,7 +1693,7 @@ export default function AdminDashboard({
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/40">
               <div>
                 <h3 className="font-bold text-xs text-gray-900 flex items-center gap-1.5 uppercase">
@@ -2034,7 +2166,7 @@ export default function AdminDashboard({
           </div>
 
           {/* Depletion Forecast & Ingredient Inventory */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 space-y-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-5 space-y-4">
             <div className="text-right">
               <h3 className="font-extrabold text-xs text-gray-900 dark:text-white uppercase flex items-center gap-1.5 justify-start">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -2141,7 +2273,7 @@ export default function AdminDashboard({
           </div>
 
           {/* Recipes Matrix list */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 space-y-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-5 space-y-4">
             <div className="text-right">
               <h3 className="font-extrabold text-xs text-gray-900 dark:text-white uppercase flex items-center gap-1.5 justify-start">
                 <ChefHat className="w-4 h-4 text-rose-500" />
@@ -2189,7 +2321,7 @@ export default function AdminDashboard({
       )}
 
       {activeTab === 'settings' && (
-        <div className="bg-white dark:bg-gray-905 border border-gray-150 dark:border-gray-800 rounded-3xl p-6 shadow-xs space-y-6 text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="bg-white dark:bg-gray-905 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-6 shadow-xs space-y-6 text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
           <div className="border-b border-gray-100/10 pb-4">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <span>⚙️</span>
@@ -2231,6 +2363,605 @@ export default function AdminDashboard({
                   }`}
                 />
               </button>
+            </div>
+
+            {/* Store Brand & Appearance Settings */}
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-6 mt-6 space-y-4">
+              <div>
+                <h4 className="text-xs font-extrabold text-gray-900 dark:text-white uppercase tracking-wider">
+                  {lang === 'ar' ? 'مظهر وهواية المتجر (الماركة)' : 'Store Branding & Aesthetics'}
+                </h4>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  {lang === 'ar' ? 'تخصيص ألوان الهوية والشعار ومعلومات الاتصال وعناوين الفروع الأساسية للمتجر' : 'Customize identity colors, logo, default theme, phone and branch addresses'}
+                </p>
+              </div>
+
+              {/* Theme Selector */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40">
+                <div className="space-y-1 text-right">
+                  <span className="text-xs font-bold text-gray-800 dark:text-white block">
+                    {lang === 'ar' ? 'وضع مظهر الموقع الافتراضي' : 'Default Theme Mode'}
+                  </span>
+                  <p className="text-[10px] text-gray-400">
+                    {lang === 'ar' ? 'اختر مظهر الموقع الافتراضي للمستخدمين والمدراء.' : 'Select the default theme mode for users and managers.'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (setDarkMode) setDarkMode(false);
+                      if (setTenants) {
+                        setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, darkMode: false } : t));
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+                      !darkMode 
+                        ? 'bg-rose-600 text-white shadow-xs' 
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    ☀️ {lang === 'ar' ? 'فاتح' : 'Light'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (setDarkMode) setDarkMode(true);
+                      if (setTenants) {
+                        setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, darkMode: true } : t));
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+                      darkMode 
+                        ? 'bg-rose-600 text-white shadow-xs' 
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    🌙 {lang === 'ar' ? 'داكن' : 'Dark'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Color Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-2 text-right">
+                  <label className="text-xs font-bold text-gray-800 dark:text-white block">
+                    {lang === 'ar' ? 'اللون الأساسي للهوية' : 'Primary Brand Color'}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={tenant.primaryColor || '#e11d48'}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, primaryColor: e.target.value } : t));
+                        }
+                      }}
+                      className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={tenant.primaryColor || '#e11d48'}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, primaryColor: e.target.value } : t));
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-2 text-right">
+                  <label className="text-xs font-bold text-gray-800 dark:text-white block">
+                    {lang === 'ar' ? 'اللون الثانوي للهوية' : 'Secondary Brand Color'}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={tenant.secondaryColor || '#fb7185'}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, secondaryColor: e.target.value } : t));
+                        }
+                      }}
+                      className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent"
+                    />
+                    <input
+                      type="text"
+                      value={tenant.secondaryColor || '#fb7185'}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, secondaryColor: e.target.value } : t));
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Logo Settings */}
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-xs font-bold text-gray-800 dark:text-white block">
+                      {lang === 'ar' ? 'شعار المتجر (Logo)' : 'Store Brand Logo'}
+                    </label>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input
+                        type="text"
+                        value={tenant.logoUrl || ''}
+                        onChange={(e) => {
+                          if (setTenants) {
+                            setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: e.target.value } : t));
+                          }
+                        }}
+                        placeholder="https://example.com/logo.png"
+                        className="flex-1 px-3 py-2 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono text-left"
+                        dir="ltr"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGalleryTarget('logo');
+                          setShowMediaGallery(true);
+                        }}
+                        className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        <Layers className="w-4 h-4" />
+                        {lang === 'ar' ? 'المعرض' : 'Gallery'}
+                      </button>
+                      <label className="flex items-center justify-center gap-1.5 px-4 py-2 border border-gray-255 dark:border-gray-700 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-755 transition cursor-pointer select-none shrink-0">
+                        <Upload className="w-3.5 h-3.5 text-gray-500" />
+                        <span>{lang === 'ar' ? 'رفع الشعار' : 'Upload Logo'}</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleLogoImageUpload}
+                          className="hidden" 
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center justify-center border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-3 h-24 bg-white dark:bg-gray-855">
+                    {tenant.logoUrl ? (
+                      <img src={tenant.logoUrl} alt="Logo preview" className="max-h-full max-w-full object-contain rounded-lg shadow-xs bg-white" />
+                    ) : (
+                      <span className="text-[10px] text-gray-400">{lang === 'ar' ? 'لا يوجد شعار' : 'No logo preview'}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Logo visibility options */}
+                <div className="flex flex-col sm:flex-row gap-4 pt-2 border-t border-gray-100/10">
+                  <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={tenant.showLogoInHeader !== false}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, showLogoInHeader: e.target.checked } : t));
+                        }
+                      }}
+                      className="rounded-sm border-gray-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                    <span>{lang === 'ar' ? 'عرض اللوجو في الهيدر (Header)' : 'Show Logo in Sticky Header'}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={tenant.showLogoInFooter !== false}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, showLogoInFooter: e.target.checked } : t));
+                        }
+                      }}
+                      className="rounded-sm border-gray-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                    <span>{lang === 'ar' ? 'عرض اللوجو في الفوتر (Footer)' : 'Show Logo in Main Footer'}</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Multiple Branches & Locations Management */}
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+                <div className="flex justify-between items-center pb-2 border-b border-gray-100/10">
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-850 dark:text-white">
+                      {lang === 'ar' ? 'إدارة الفروع وعناوينها (أكثر من عنوان ورقم)' : 'Branches & Locations Editor'}
+                    </h5>
+                    <p className="text-[9px] text-gray-400 mt-0.5">
+                      {lang === 'ar' ? 'يمكنك إضافة فروع متعددة مع عناوين باللغتين وأرقام هواتف منفصلة للفوتر.' : 'Add, edit or remove multiple branch locations and contact details.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (setBranches) {
+                        const newId = `b-${Date.now()}`;
+                        setBranches(prev => [
+                          ...prev,
+                          {
+                            id: newId,
+                            tenantId: tenant.id,
+                            nameEn: 'New Branch Location',
+                            nameAr: 'فرع جديد للمطعم',
+                            addressEn: 'Main Street Address',
+                            addressAr: 'عنوان تفصيلي للفرع',
+                            phone: tenant.phone || '',
+                            isActive: true
+                          }
+                        ]);
+                      }
+                    }}
+                    className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1"
+                  >
+                    + {lang === 'ar' ? 'إضافة فرع جديد' : 'Add New Branch'}
+                  </button>
+                </div>
+
+                <div className="space-y-3.5 pt-2 max-h-[400px] overflow-y-auto pr-1">
+                  {branches.filter(b => b.tenantId === tenant.id).map((branch, index) => (
+                    <div key={branch.id} className="p-3 bg-white dark:bg-gray-850 rounded-xl border border-gray-150/20 dark:border-gray-800 space-y-3 relative shadow-xs">
+                      <div className="flex justify-between items-center pb-2 border-b border-gray-100/10">
+                        <span className="text-[10px] font-bold text-rose-600">
+                          {lang === 'ar' ? `الفرع ${index + 1}` : `Location ${index + 1}`}
+                        </span>
+                        {branches.filter(b => b.tenantId === tenant.id).length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (setBranches) {
+                                setBranches(prev => prev.filter(b => b.id !== branch.id));
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-700 text-[10px] font-bold transition"
+                          >
+                            {lang === 'ar' ? 'حذف الفرع' : 'Remove Branch'}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-gray-500">{lang === 'ar' ? 'اسم الفرع (عربي)' : 'Branch Name (AR)'}</label>
+                          <input
+                            type="text"
+                            value={branch.nameAr}
+                            onChange={(e) => {
+                              if (setBranches) {
+                                setBranches(prev => prev.map(b => b.id === branch.id ? { ...b, nameAr: e.target.value } : b));
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-gray-500">{lang === 'ar' ? 'اسم الفرع (إنجليزي)' : 'Branch Name (EN)'}</label>
+                          <input
+                            type="text"
+                            value={branch.nameEn}
+                            onChange={(e) => {
+                              if (setBranches) {
+                                setBranches(prev => prev.map(b => b.id === branch.id ? { ...b, nameEn: e.target.value } : b));
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                            dir="ltr"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-gray-500">{lang === 'ar' ? 'عنوان الفرع (عربي)' : 'Address (AR)'}</label>
+                          <input
+                            type="text"
+                            value={branch.addressAr}
+                            onChange={(e) => {
+                              if (setBranches) {
+                                setBranches(prev => prev.map(b => b.id === branch.id ? { ...b, addressAr: e.target.value } : b));
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-gray-500">{lang === 'ar' ? 'عنوان الفرع (إنجليزي)' : 'Address (EN)'}</label>
+                          <input
+                            type="text"
+                            value={branch.addressEn}
+                            onChange={(e) => {
+                              if (setBranches) {
+                                setBranches(prev => prev.map(b => b.id === branch.id ? { ...b, addressEn: e.target.value } : b));
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                            dir="ltr"
+                          />
+                        </div>
+
+                        <div className="space-y-1 md:col-span-2">
+                          <label className="text-[9px] font-bold text-gray-500">{lang === 'ar' ? 'رقم الهاتف المخصص للفرع' : 'Branch Phone Number'}</label>
+                          <input
+                            type="text"
+                            value={branch.phone}
+                            onChange={(e) => {
+                              if (setBranches) {
+                                setBranches(prev => prev.map(b => b.id === branch.id ? { ...b, phone: e.target.value } : b));
+                              }
+                            }}
+                            placeholder="+966 50 123 4567"
+                            className="w-full px-2.5 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left font-mono"
+                            dir="ltr"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social Media Links & Chat Customization */}
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+                <div>
+                  <h5 className="text-xs font-bold text-gray-800 dark:text-white">
+                    {lang === 'ar' ? 'روابط التواصل الاجتماعي ورقم الواتساب' : 'Social Channels & WhatsApp'}
+                  </h5>
+                  <p className="text-[9px] text-gray-400 mt-0.5">
+                    {lang === 'ar' ? 'تعديل روابط منصات التواصل ورقم الواتساب للربط التلقائي في المنيو.' : 'Update social channel links and support WhatsApp number.'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رقم الواتساب للمتجر' : 'WhatsApp Chat Number'}</label>
+                    <input
+                      type="text"
+                      value={tenant.whatsappNumber || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, whatsappNumber: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="966500000000"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رابط حساب الانستجرام (Instagram)' : 'Instagram URL'}</label>
+                    <input
+                      type="text"
+                      value={tenant.instagramUrl || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, instagramUrl: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="https://instagram.com/yourbrand"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رابط حساب الفيسبوك (Facebook)' : 'Facebook URL'}</label>
+                    <input
+                      type="text"
+                      value={tenant.facebookUrl || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, facebookUrl: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="https://facebook.com/yourbrand"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رابط حساب تويتر / إكس (Twitter/X)' : 'Twitter / X URL'}</label>
+                    <input
+                      type="text"
+                      value={tenant.twitterUrl || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, twitterUrl: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="https://x.com/yourbrand"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Customization Fields */}
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+                <div>
+                  <h5 className="text-xs font-bold text-gray-800 dark:text-white">
+                    {lang === 'ar' ? 'تخصيص نصوص الفوتر' : 'Footer Content Customization'}
+                  </h5>
+                  <p className="text-[9px] text-gray-400 mt-0.5">
+                    {lang === 'ar' ? 'تعديل نصوص الفوتر التعريفية وساعات العمل في المنيو الرقمي للعملاء.' : 'Modify slogan, description and opening hours rendered in the footer.'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Slogan */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'شعار المتجر القصير (عربي)' : 'Brand Slogan (Arabic)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.sloganAr || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, sloganAr: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="أفضل جودة وخدمة ممتازة"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'شعار المتجر القصير (إنجليزي)' : 'Brand Slogan (English)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.sloganEn || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, sloganEn: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="Premium Quality & Experience"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'وصف المتجر في الفوتر (عربي)' : 'Footer Description (Arabic)'}</label>
+                    <textarea
+                      value={tenant.descAr || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, descAr: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="فخورون بتقديم أشهى المأكولات المعدة بحب وشغف طيلة أيام الأسبوع..."
+                      rows={2}
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'وصف المتجر في الفوتر (إنجليزي)' : 'Footer Description (English)'}</label>
+                    <textarea
+                      value={tenant.descEn || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, descEn: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="Proudly serving handcrafted meals prepared with fresh ingredients..."
+                      rows={2}
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs resize-none text-left"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {/* Hours */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'أوقات العمل (عربي)' : 'Opening Hours (Arabic)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.hoursAr || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, hoursAr: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="ساعات العمل: ١٢ ظهراً - ١٢ ليلاً"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'أوقات العمل (إنجليزي)' : 'Opening Hours (English)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.hoursEn || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, hoursEn: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="Opening Hours: 12 PM - 12 AM"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {/* Support Message */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'نص خدمة العملاء (عربي)' : 'Support Callout (Arabic)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.supportAr || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, supportAr: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="هل لديك أي استفسار أو ترغب في تقديم طلب خاص؟ تواصل معنا مباشرة"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'نص خدمة العملاء (إنجليزي)' : 'Support Callout (English)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.supportEn || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, supportEn: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="Have any questions or special orders? Contact our support channels directly"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {/* Social Message */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'نص وسائل التواصل الاجتماعي (عربي)' : 'Social Callout (Arabic)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.socialAr || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, socialAr: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="ابقَ على اطلاع بأحدث عروضنا الموسمية وأطباقنا الجديدة..."
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'نص وسائل التواصل الاجتماعي (إنجليزي)' : 'Social Callout (English)'}</label>
+                    <input
+                      type="text"
+                      value={tenant.socialEn || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, socialEn: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="Stay tuned for seasonal discounts, new menu arrivals..."
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {/* Handle */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'المعرف الرقمي للموقع (Social Handle)' : 'Branded Social Handle'}</label>
+                    <input
+                      type="text"
+                      value={tenant.handle || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, handle: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="@meatport.restaurant"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2450,7 +3181,10 @@ export default function AdminDashboard({
                     />
                     <button
                       type="button"
-                      onClick={() => setShowMediaGallery(true)}
+                      onClick={() => {
+                        setGalleryTarget('product');
+                        setShowMediaGallery(true);
+                      }}
                       className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition text-xs font-semibold flex items-center gap-1.5 shrink-0"
                     >
                       <Layers className="w-4 h-4" />
@@ -2784,7 +3518,41 @@ export default function AdminDashboard({
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleProductImageUpload}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = async (event) => {
+                        const base64Data = event.target?.result as string;
+                        try {
+                          const res = await fetch('/api/upload-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ fileName: file.name, base64Data })
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
+                            if (galleryTarget === 'product') {
+                              setProdImageUrl(data.url);
+                            } else if (galleryTarget === 'category') {
+                              setCatImageUrl(data.url);
+                            } else if (galleryTarget === 'logo') {
+                              if (setTenants) {
+                                setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: data.url } : t));
+                              }
+                            }
+                            setShowMediaGallery(false);
+                            setGalleryTarget(null);
+                          } else {
+                            alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
+                          }
+                        } catch (err) {
+                          alert(lang === 'ar' ? 'خطأ أثناء الرفع' : 'Error uploading image');
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }}
                   />
                 </label>
               </div>
@@ -2802,13 +3570,26 @@ export default function AdminDashboard({
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3.5">
                   {filteredGalleryImages.map((imgUrl, i) => {
                     const fileName = imgUrl.split('/').pop() || '';
-                    const isSelected = prodImageUrl === imgUrl;
+                    const isSelected = galleryTarget === 'product'
+                      ? prodImageUrl === imgUrl
+                      : galleryTarget === 'category'
+                      ? catImageUrl === imgUrl
+                      : tenant.logoUrl === imgUrl;
                     return (
                       <div 
                         key={i}
                         onClick={() => {
-                          setProdImageUrl(imgUrl);
+                          if (galleryTarget === 'product') {
+                            setProdImageUrl(imgUrl);
+                          } else if (galleryTarget === 'category') {
+                            setCatImageUrl(imgUrl);
+                          } else if (galleryTarget === 'logo') {
+                            if (setTenants) {
+                              setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: imgUrl } : t));
+                            }
+                          }
                           setShowMediaGallery(false);
+                          setGalleryTarget(null);
                         }}
                         className={`group relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer border-2 transition hover:scale-[1.02] shadow-sm hover:shadow-md ${
                           isSelected ? 'border-rose-600 ring-2 ring-rose-100' : 'border-gray-200 hover:border-rose-300'
@@ -2826,7 +3607,7 @@ export default function AdminDashboard({
                         </div>
                         {/* Selected checkmark */}
                         {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 bg-rose-600 text-white rounded-full p-0.5 shadow-sm">
+                          <div className="absolute top-1.5 right-1.5 bg-rose-600 text-white rounded-full p-0.5 shadow-sm animate-in zoom-in-50">
                             <Check className="w-3.5 h-3.5" />
                           </div>
                         )}
