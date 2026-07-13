@@ -2257,7 +2257,7 @@ export default function AdminDashboard({
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="p-6 space-y-5 text-xs text-gray-700 text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <form onSubmit={handleSaveProduct} className="p-6 space-y-5 text-xs text-gray-700 text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
               
               {/* Product Names */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2662,7 +2662,7 @@ export default function AdminDashboard({
               </button>
             </div>
 
-            <form onSubmit={handleSaveCategory} className="p-6 space-y-4 text-xs text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <form onSubmit={handleSaveCategory} className="p-6 space-y-4 text-xs text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
               <div className="space-y-1.5">
                 <label className="font-semibold text-gray-700">{lang === 'ar' ? 'اسم الفئة بالإنجليزية *' : 'Category Title EN *'}</label>
                 <input 

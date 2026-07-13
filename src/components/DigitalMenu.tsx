@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, Flame, Clock, Plus, Minus, Share2, Heart, Info, AlertCircle, 
   ChevronRight, ShoppingBag, X, Check, Star, Moon, Sun, Languages,
@@ -311,7 +311,9 @@ export default function DigitalMenu({
     ]);
 
     setSelectedProduct(null);
-    setShowCartDrawer(true);
+    if (window.innerWidth >= 768) {
+      setShowCartDrawer(true);
+    }
   };
 
   // Cart calculations
@@ -1349,7 +1351,7 @@ export default function DigitalMenu({
             </div>
 
             {/* Selection Body */}
-            <div className="p-6 space-y-6 flex-1 overflow-y-auto text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="p-6 space-y-6 flex-1 overflow-y-auto text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
               <div className="space-y-1.5">
                 <h3 className="text-xl font-bold tracking-tight">{lang === 'ar' ? selectedProduct.nameAr : selectedProduct.nameEn}</h3>
                 <p className={`text-xs leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -1541,7 +1543,7 @@ export default function DigitalMenu({
             </div>
 
             {/* Cart Items List */}
-            <div className="p-6 flex-1 overflow-y-auto space-y-4 text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="p-6 flex-1 overflow-y-auto space-y-4 text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
               {cart.length === 0 ? (
                 <div className="h-64 flex flex-col items-center justify-center text-center text-gray-400 space-y-2">
                   <ShoppingBag className="w-10 h-10 stroke-1" />
@@ -1884,7 +1886,7 @@ export default function DigitalMenu({
               <span className="w-5 h-5 rounded-full bg-white/20 text-[10px] font-bold text-white flex items-center justify-center">
                 {cart.reduce((sum, item) => sum + item.quantity, 0)}
               </span>
-              <span>{lang === 'ar' ? 'عرض الطلب الحالي' : 'View Current Order'}</span>
+              <span>{lang === 'ar' ? 'الذهاب للدفع وإرسال الطلب 🚀' : 'Go to Checkout & Transmit Order 🚀'}</span>
             </div>
             
             <div className="flex items-center gap-2 font-bold">

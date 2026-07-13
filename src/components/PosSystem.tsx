@@ -864,7 +864,7 @@ export default function PosSystem({
       {/* MODAL 1: SIZES & MODIFIERS COMPONENT POPUP */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-y-auto flex flex-col justify-between border border-gray-100 text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-y-auto flex flex-col justify-between border border-gray-100 text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
             
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
@@ -1055,7 +1055,7 @@ export default function PosSystem({
       {/* MODAL 3: SUSPENDED ORDERS MANAGER */}
       {showSuspendedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-2xl p-5 w-full max-w-sm border border-gray-100 text-left" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className="bg-white rounded-2xl shadow-2xl p-5 w-full max-w-sm border border-gray-100 text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
             <div className="flex items-center justify-between border-b pb-2 mb-3">
               <h3 className="font-bold text-sm text-gray-900 flex items-center gap-1.5">
                 <Clock className="w-4.5 h-4.5 text-amber-500" />
@@ -1325,7 +1325,7 @@ export default function PosSystem({
               </div>
 
               {/* Items row */}
-              <div className="space-y-2 text-left font-sans" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+              <div className="space-y-2 text-left rtl:text-right font-sans" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                 <div className="flex justify-between font-bold border-b border-gray-300 border-dotted pb-1.5 text-[9px] text-gray-400 uppercase tracking-wider">
                   <span>{lang === 'ar' ? 'الصنف' : 'Item Description'}</span>
                   <span>{lang === 'ar' ? 'الكمية * السعر' : 'Qty * Price'}</span>
