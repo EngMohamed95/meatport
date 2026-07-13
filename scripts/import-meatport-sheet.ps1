@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$WorkbookPath = "Meat Port 2.xlsx"
 )
 
@@ -497,4 +497,8 @@ $dump.recipes = @()
 $dump.orderItems = @()
 $dump | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $dumpPath -Encoding utf8
 
+# Apply Arabic translations to the imported catalog
+node (Join-Path $PSScriptRoot "apply-ar-translations.cjs")
+
 Write-Output "Imported $($categories.Count) categories and $($products.Count) products for Meatport."
+
