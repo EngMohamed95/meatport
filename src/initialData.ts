@@ -10,7 +10,9 @@ export const initialTenants: Tenant[] = [
     logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&h=150&fit=crop&q=80',
     primaryColor: '#e11d48', // rose-600
     currencyEn: 'SAR',
-    currencyAr: 'ر.س'
+    currencyAr: 'ر.س',
+    descAr: 'نجمع بين عراقة المطبخ التركي وجودة المكونات الطازجة، لنقدّم لكم تجربة طعام مميزة تعكس أصالة الضيافة التركية.',
+    descEn: 'We combine the heritage of Turkish cuisine with the quality of fresh ingredients, to offer you a unique dining experience that reflects the authenticity of Turkish hospitality.'
   }
 ];
 

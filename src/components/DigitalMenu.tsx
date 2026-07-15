@@ -116,6 +116,61 @@ export default function DigitalMenu({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Hero slider background images
+  const heroImages = useMemo(() => {
+    if (tenant.id === 't-1') {
+      return [
+        'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=1600&q=80', // Turkish chef grilling kebab/meat
+        'https://images.unsplash.com/photo-1544025162-d76694265947?w=1600&q=80', // Steak preparation
+        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80', // Turkish food platter
+        'https://images.unsplash.com/photo-1525610553991-2bede1a236e2?w=1600&q=80'  // People dining together
+      ];
+    }
+    return [
+      'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1600&q=80', // Pizza making
+      'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1600&q=80', // Fresh pizza
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600&q=80'  // Chef in kitchen
+    ];
+  }, [tenant.id]);
+
+  const [activeHeroImageIndex, setActiveHeroImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveHeroImageIndex(prev => (prev + 1) % heroImages.length);
+    }, 4500); // Change image every 4.5 seconds
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
+  // Drag-to-scroll for horizontal categories bar
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftState, setScrollLeftState] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeftState(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Scroll speed
+    scrollRef.current.scrollLeft = scrollLeftState - walk;
+  };
   
   // Design layout configuration
   const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
@@ -669,16 +724,23 @@ export default function DigitalMenu({
       {/* Brand Hero Banner */}
       <div 
         id="hero"
-        className="relative h-56 md:h-64 bg-cover bg-center overflow-hidden flex items-end"
-        style={{ 
-          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.85)), url(${
-            tenant.id === 't-1' 
-              ? 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=1600&q=80' 
-              : 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1600&q=80'
-          })` 
-        }}
+        className="relative h-56 md:h-64 overflow-hidden flex items-end"
       >
-        <div className="max-w-7xl mx-auto w-full px-6 pb-6 flex items-center gap-4">
+        {/* Dynamic Background Image Slider */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {heroImages.map((img, idx) => (
+            <div
+              key={idx}
+              className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+              style={{
+                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.85)), url(${img})`,
+                opacity: activeHeroImageIndex === idx ? 1 : 0,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 pb-6 flex items-center gap-4">
           <div className="text-right">
             <span className="text-[8px] font-bold uppercase tracking-wider text-white bg-[var(--tenant-primary)] px-2.5 py-0.5 rounded-full inline-block">
               {lang === 'ar' ? 'أفضل المأكولات الطازجة' : 'PREMIUM FOOD EXPERIENCE'}
@@ -688,8 +750,12 @@ export default function DigitalMenu({
             </h2>
             <p className="text-[9px] md:text-xs text-gray-300 mt-1 max-w-xl leading-relaxed font-medium">
               {lang === 'ar' 
-                ? 'نقدّم لكم أشهى الوجبات المجهزة يدوياً وبأعلى معايير الجودة والطهو الإيطالي والشرقي الفاخر، باستخدام الخضروات واللحوم الطازجة يومياً.' 
-                : 'Indulge in our carefully crafted menu, prepared fresh daily by premium chefs using locally sourced fresh ingredients and traditional recipes.'}
+                ? (tenant.descAr || (tenant.id === 't-1' 
+                    ? 'نجمع بين عراقة المطبخ التركي وجودة المكونات الطازجة، لنقدّم لكم تجربة طعام مميزة تعكس أصالة الضيافة التركية.'
+                    : 'نقدّم لكم أشهى الوجبات المجهزة يدوياً وبأعلى معايير الجودة والطهو الإيطالي والشرقي الفاخر، باستخدام الخضروات واللحوم الطازجة يومياً.'))
+                : (tenant.descEn || (tenant.id === 't-1'
+                    ? 'We combine the heritage of Turkish cuisine with the quality of fresh ingredients, to offer you a unique dining experience that reflects the authenticity of Turkish hospitality.'
+                    : 'Indulge in our carefully crafted menu, prepared fresh daily by premium chefs using locally sourced fresh ingredients and traditional recipes.'))}
             </p>
             <div className="mt-2.5 flex items-center gap-2.5 text-[8px] text-gray-400 font-semibold">
               <span>⏰ {lang === 'ar' ? '١٢ ظهراً - ١٢ ليلاً' : '12 PM - 12 AM'}</span>
@@ -774,11 +840,89 @@ export default function DigitalMenu({
             </div>
           )}
         </div>
+
+        {/* Horizontal Category Bar (Text only, scrollable, thin - Mobile/Tablet only) */}
+        <div className="sticky top-[68px] z-30 -mx-4 px-4 py-2.5 border-b backdrop-blur-md bg-white/90 dark:bg-gray-950/90 border-gray-100 dark:border-gray-900 transition-colors duration-300 select-none group/catbar md:hidden">
+          <div className="relative max-w-7xl mx-auto flex items-center">
+            
+            {/* Scroll Left Button */}
+            <button 
+              onClick={() => {
+                if (scrollRef.current) {
+                  const direction = lang === 'ar' ? 150 : -150;
+                  scrollRef.current.scrollBy({ left: direction, behavior: 'smooth' });
+                }
+              }}
+              className="absolute left-0 z-10 p-1.5 rounded-full bg-white/90 dark:bg-gray-900/90 border dark:border-gray-800 shadow-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition cursor-pointer hidden md:flex items-center justify-center opacity-0 group-hover/catbar:opacity-100"
+              title={lang === 'ar' ? 'السابق' : 'Previous'}
+            >
+              <ChevronRight className="w-3.5 h-3.5 rotate-180" />
+            </button>
+
+            {/* Scrollable Container */}
+            <div 
+              ref={scrollRef}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              className={`flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth flex-nowrap py-1 w-full ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+            >
+              {/* All Items Button */}
+              <button
+                onClick={() => handleCategorySelect('all')}
+                className={`pb-1 text-xs font-black transition-all duration-300 whitespace-nowrap cursor-pointer border-b-2 ${
+                  selectedCategory === 'all'
+                    ? 'text-[var(--tenant-primary)] border-[var(--tenant-primary)]'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                {lang === 'ar' ? 'كل الوجبات' : 'All Items'}
+              </button>
+
+              {/* Dynamic Categories Map */}
+              {tenantCategories.map(c => {
+                const isSelected = selectedCategory === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => handleCategorySelect(c.id)}
+                    className={`pb-1 text-xs font-black transition-all duration-300 whitespace-nowrap cursor-pointer border-b-2 ${
+                      isSelected
+                        ? 'text-[var(--tenant-primary)] border-[var(--tenant-primary)]'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {lang === 'ar' ? c.nameAr : c.nameEn}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Scroll Right Button */}
+            <button 
+              onClick={() => {
+                if (scrollRef.current) {
+                  const direction = lang === 'ar' ? -150 : 150;
+                  scrollRef.current.scrollBy({ left: direction, behavior: 'smooth' });
+                }
+              }}
+              className="absolute right-0 z-10 p-1.5 rounded-full bg-white/90 dark:bg-gray-900/90 border dark:border-gray-800 shadow-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition cursor-pointer hidden md:flex items-center justify-center opacity-0 group-hover/catbar:opacity-100"
+              title={lang === 'ar' ? 'التالي' : 'Next'}
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+            
+          </div>
+        </div>
+
         {/* Two-Column Sidebar Layout */}
         <div className="flex flex-row gap-4 md:gap-6 items-start relative select-none">
           
-          {/* Categories Sidebar */}
-          <aside className="w-20 sm:w-24 md:w-64 shrink-0 sticky top-[78px] z-30 max-h-[calc(100vh-100px)] overflow-y-auto no-scrollbar space-y-4">
+          {/* Categories Sidebar (Desktop only) */}
+          <aside className="hidden md:block w-64 shrink-0 sticky top-[78px] z-30 max-h-[calc(100vh-100px)] overflow-y-auto no-scrollbar space-y-4">
             
             {/* Desktop Sidebar Title */}
             <div className="hidden md:block px-2">
@@ -879,8 +1023,8 @@ export default function DigitalMenu({
                   {tenantProducts.length} {lang === 'ar' ? 'منتج' : 'items'}
                 </span>
                 
-                {/* View Switcher toggle */}
-                <div className="flex items-center gap-1 border rounded-xl p-1 bg-white dark:bg-gray-900 border-gray-200/50 dark:border-gray-800 shrink-0 shadow-xs">
+                {/* View Switcher toggle (Desktop only) */}
+                <div className="hidden md:flex items-center gap-1 border rounded-xl p-1 bg-white dark:bg-gray-900 border-gray-200/50 dark:border-gray-800 shrink-0 shadow-xs">
                   <button 
                     onClick={() => setLayoutMode('grid')}
                     className={`p-1.5 rounded-lg transition ${
@@ -908,200 +1052,300 @@ export default function DigitalMenu({
             </div>
 
             {/* Products Loop */}
-            {layoutMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                 {tenantProducts.map(p => {
-              const isFav = favorites.includes(p.id);
-              return (
-                <div 
-                  key={p.id}
-                  onClick={() => handleOpenProduct(p)}
-                  className={`product-card group rounded-[2rem] overflow-hidden border cursor-pointer transition-all duration-500 hover:translate-y-[-4px] hover:shadow-2xl flex flex-col justify-between ${
-                    darkMode 
-                      ? 'bg-gray-900/70 border-white/10 hover:border-rose-500/40 hover:shadow-rose-950/20' 
-                      : 'bg-white border-gray-100 hover:border-rose-200 hover:shadow-rose-100/70'
-                  }`}
-                >
-                  {/* Product Cover image */}
-                  <div className="relative h-56 sm:h-52 overflow-hidden bg-gray-100">
-                    <img 
-                      src={p.imageUrl} 
-                      alt={p.nameEn} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/65 to-transparent opacity-80" />
-                    
-                    {/* Floating tags */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                      {p.discountRate > 0 ? (
-                        <span className="bg-green-600 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm pointer-events-auto">
-                          -{p.discountRate * 100}% {lang === 'ar' ? 'خصم' : 'OFF'}
+            
+            {/* Mobile View: Always Compact Horizontal Cards */}
+            <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {tenantProducts.map(p => {
+                const isFav = favorites.includes(p.id);
+                return (
+                  <div 
+                    key={`mobile-${p.id}`}
+                    onClick={() => handleOpenProduct(p)}
+                    className={`group rounded-[1.25rem] overflow-hidden border cursor-pointer transition-all duration-300 hover:translate-y-[-1px] hover:shadow-md flex items-center p-2.5 sm:p-3 gap-3 ${
+                      darkMode 
+                        ? 'bg-gray-900/40 border-gray-900 hover:border-gray-800' 
+                        : 'bg-white border-gray-100 hover:border-rose-100'
+                    }`}
+                  >
+                    {/* Left: Product Image */}
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                      <img 
+                        src={p.imageUrl} 
+                        alt={p.nameEn} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        referrerPolicy="no-referrer"
+                      />
+                      {p.discountRate > 0 && (
+                        <span className="absolute top-1 left-1 bg-green-600 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full">
+                          -${p.discountRate * 100}%
                         </span>
-                      ) : (
-                        <span />
                       )}
-
-                      <div className="flex gap-1.5 pointer-events-auto">
-                        <button 
-                          onClick={(e) => toggleFavorite(p.id, e)}
-                          className={`p-2 rounded-full backdrop-blur-md shadow-sm transition ${
-                            isFav ? 'bg-rose-600 text-white' : 'bg-black/30 text-white hover:bg-black/50'
-                          }`}
-                        >
-                          <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-                        </button>
-                        <button 
-                          onClick={(e) => handleShare(p, e)}
-                          className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition shadow-sm"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product Text body */}
-                  <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1.5 text-right">
-                      <h4 className="product-title font-black text-lg sm:text-base transition">
-                        {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
-                      </h4>
-                      <p className={`text-sm sm:text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {highlightText(lang === 'ar' ? p.descriptionAr : p.descriptionEn, searchQuery)}
-                      </p>
                     </div>
 
-                    {/* Attributes & Cart triggering */}
-                    <div className="border-t border-gray-100/10 pt-4 flex items-center justify-between gap-3">
-                      <div>
-                        {p.discountRate > 0 && (
-                          <span className="text-[10px] line-through text-gray-400 block">
-                            {(p.price).toFixed(2)} <SaudiRiyalIcon />
+                    {/* Middle: Text details */}
+                    <div className="flex-1 min-w-0 space-y-1 text-right">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="product-title font-black text-xs sm:text-sm transition truncate">
+                          {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
+                        </h4>
+                        {p.isFeatured && (
+                          <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-bold rounded">
+                            ★
                           </span>
                         )}
-                        <span className="text-lg sm:text-base font-black text-rose-600">
-                          {(p.price * (1 - p.discountRate)).toFixed(2)} <SaudiRiyalIcon />
-                        </span>
                       </div>
-
-                      <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold">
+                      <p className={`text-[9px] sm:text-[10px] line-clamp-2 leading-tight ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {highlightText(lang === 'ar' ? p.descriptionAr : p.descriptionEn, searchQuery)}
+                      </p>
+                      
+                      <div className="flex items-center gap-2 pt-0.5 font-bold">
                         {p.calories && (
-                          <span className="hidden sm:flex items-center gap-0.5">
+                          <span className="flex items-center gap-0.5 text-[9px] text-gray-400">
                             <Flame className="w-3 h-3 text-amber-500" />
                             {p.calories} Cal
                           </span>
                         )}
-                        <span className="product-add-button flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-110">
-                          <Plus className="w-5 h-5" />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                 {tenantProducts.map(p => {
-              const isFav = favorites.includes(p.id);
-              return (
-                <div 
-                  key={p.id}
-                  onClick={() => handleOpenProduct(p)}
-                  className={`group rounded-2xl overflow-hidden border cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-sm flex items-center p-3 sm:p-4 gap-4 ${
-                    darkMode 
-                      ? 'bg-gray-900/40 border-gray-900 hover:border-gray-800' 
-                      : 'bg-white border-gray-100 hover:border-rose-100'
-                  }`}
-                >
-                  {/* Left: Product Image */}
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                    <img 
-                      src={p.imageUrl} 
-                      alt={p.nameEn} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    {p.discountRate > 0 && (
-                      <span className="absolute top-1 left-1 bg-green-600 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full">
-                        -{p.discountRate * 100}%
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Middle: Text details */}
-                  <div className="flex-1 min-w-0 space-y-1 text-right">
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="product-title font-extrabold text-xs sm:text-sm transition truncate">
-                        {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
-                      </h4>
-                      {p.isFeatured && (
-                        <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-bold rounded">
-                          ★
-                        </span>
-                      )}
-                    </div>
-                    <p className={`text-[10px] sm:text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {highlightText(lang === 'ar' ? p.descriptionAr : p.descriptionEn, searchQuery)}
-                    </p>
-                    
-                    <div className="flex items-center gap-2 pt-1 font-bold">
-                      {p.calories && (
-                        <span className="flex items-center gap-0.5 text-[9px] text-gray-400">
-                          <Flame className="w-3 h-3 text-amber-500" />
-                          {p.calories} Cal
-                        </span>
-                      )}
-                      {p.preparationTime && (
-                        <span className="flex items-center gap-0.5 text-[9px] text-gray-400">
-                          <Clock className="w-3 h-3 text-blue-400" />
-                          {p.preparationTime} {lang === 'ar' ? 'دقائق' : 'mins'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right: Price & Add Button */}
-                  <div className="flex flex-col items-end justify-between self-stretch shrink-0 min-h-full">
-                    {/* Share / Favorite */}
-                    <div className="flex gap-1">
-                      <button 
-                        onClick={(e) => toggleFavorite(p.id, e)}
-                        className={`p-1.5 rounded-full transition ${
-                          isFav ? 'text-rose-600' : 'text-gray-300 hover:text-gray-500'
-                        }`}
-                      >
-                        <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-                      </button>
-                    </div>
-
-                    {/* Price & Plus Button */}
-                    <div className="flex items-center gap-2 mt-auto">
-                      <div className="text-right">
-                        {p.discountRate > 0 && (
-                          <span className="text-[9px] line-through text-gray-400 block leading-none">
-                            {(p.price).toFixed(2)}
+                        {p.preparationTime && (
+                          <span className="flex items-center gap-0.5 text-[9px] text-gray-400">
+                            <Clock className="w-3 h-3 text-blue-400" />
+                            {p.preparationTime} {lang === 'ar' ? 'دقائق' : 'mins'}
                           </span>
                         )}
-                        <span className="text-xs sm:text-sm font-black text-rose-600 block leading-none">
-                          {(p.price * (1 - p.discountRate)).toFixed(2)} <span className="text-[8px] font-bold"><SaudiRiyalIcon /></span>
+                      </div>
+                    </div>
+
+                    {/* Right: Price & Add Button */}
+                    <div className="flex flex-col items-end justify-between self-stretch shrink-0 min-h-full">
+                      {/* Share / Favorite */}
+                      <div className="flex gap-1">
+                        <button 
+                          onClick={(e) => toggleFavorite(p.id, e)}
+                          className={`p-1.5 rounded-full transition ${
+                            isFav ? 'text-rose-600' : 'text-gray-300 hover:text-gray-555'
+                          }`}
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                        </button>
+                      </div>
+
+                      {/* Price & Plus Button */}
+                      <div className="flex items-center gap-2 mt-auto">
+                        <div className="text-right">
+                          {p.discountRate > 0 && (
+                            <span className="text-[9px] line-through text-gray-400 block leading-none">
+                              {p.price.toFixed(2)}
+                            </span>
+                          )}
+                          <span className="text-xs sm:text-sm font-black text-rose-600 block leading-none">
+                            {(p.price * (1 - p.discountRate)).toFixed(2)} <span className="text-[8px] font-bold"><SaudiRiyalIcon /></span>
+                          </span>
+                        </div>
+                        
+                        <span className="product-add-button p-2 rounded-xl transition shadow-xs">
+                          <Plus className="w-3.5 h-3.5" />
                         </span>
                       </div>
-                      
-                      <span className="product-add-button p-2 rounded-xl transition shadow-xs">
-                        <Plus className="w-3.5 h-3.5" />
-                      </span>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-              </div>
-            )}
+                );
+              })}
+            </div>
 
-          </div>
+            {/* Desktop View: Grid or List depending on layoutMode */}
+            <div className="hidden md:block">
+              {layoutMode === 'grid' ? (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  {tenantProducts.map(p => {
+                    const isFav = favorites.includes(p.id);
+                    return (
+                      <div 
+                        key={`desktop-grid-${p.id}`}
+                        onClick={() => handleOpenProduct(p)}
+                        className={`product-card group rounded-[2rem] overflow-hidden border cursor-pointer transition-all duration-500 hover:translate-y-[-4px] hover:shadow-2xl flex flex-col justify-between ${
+                          darkMode 
+                            ? 'bg-gray-900/70 border-white/10 hover:border-rose-500/40 hover:shadow-rose-950/20' 
+                            : 'bg-white border-gray-100 hover:border-rose-200 hover:shadow-rose-100/70'
+                        }`}
+                      >
+                        {/* Product Cover image */}
+                        <div className="relative h-56 sm:h-52 overflow-hidden bg-gray-100">
+                          <img 
+                            src={p.imageUrl} 
+                            alt={p.nameEn} 
+                            className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/65 to-transparent opacity-80" />
+                          
+                          {/* Floating tags */}
+                          <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                            {p.discountRate > 0 ? (
+                              <span className="bg-green-600 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm pointer-events-auto">
+                                -${p.discountRate * 100}% {lang === 'ar' ? 'خصم' : 'OFF'}
+                              </span>
+                            ) : (
+                              <span />
+                            )}
+
+                            <div className="flex gap-1.5 pointer-events-auto">
+                              <button 
+                                onClick={(e) => toggleFavorite(p.id, e)}
+                                className={`p-2 rounded-full backdrop-blur-md shadow-sm transition ${
+                                  isFav ? 'bg-rose-600 text-white' : 'bg-black/30 text-white hover:bg-black/50'
+                                }`}
+                              >
+                                <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                              </button>
+                              <button 
+                                onClick={(e) => handleShare(p, e)}
+                                className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition shadow-sm"
+                              >
+                                <Share2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Product Text body */}
+                        <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
+                          <div className="space-y-1.5 text-right">
+                            <h4 className="product-title font-black text-lg sm:text-base transition">
+                              {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
+                            </h4>
+                            <p className={`text-sm sm:text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {highlightText(lang === 'ar' ? p.descriptionAr : p.descriptionEn, searchQuery)}
+                            </p>
+                          </div>
+
+                          {/* Attributes & Cart triggering */}
+                          <div className="border-t border-gray-100/10 pt-4 flex items-center justify-between gap-3">
+                            <div>
+                              {p.discountRate > 0 && (
+                                <span className="text-[10px] line-through text-gray-400 block">
+                                  {p.price.toFixed(2)} <SaudiRiyalIcon />
+                                </span>
+                              )}
+                              <span className="text-lg sm:text-base font-black text-rose-600">
+                                {(p.price * (1 - p.discountRate)).toFixed(2)} <SaudiRiyalIcon />
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold">
+                              {p.calories && (
+                                <span className="hidden sm:flex items-center gap-0.5">
+                                  <Flame className="w-3 h-3 text-amber-500" />
+                                  {p.calories} Cal
+                                </span>
+                              )}
+                              <span className="product-add-button flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-110">
+                                <Plus className="w-5 h-5" />
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {tenantProducts.map(p => {
+                    const isFav = favorites.includes(p.id);
+                    return (
+                      <div 
+                        key={`desktop-list-${p.id}`}
+                        onClick={() => handleOpenProduct(p)}
+                        className={`group rounded-2xl overflow-hidden border cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-sm flex items-center p-3 sm:p-4 gap-4 ${
+                          darkMode 
+                            ? 'bg-gray-900/40 border-gray-900 hover:border-gray-800' 
+                            : 'bg-white border-gray-100 hover:border-rose-100'
+                        }`}
+                      >
+                        {/* Left: Product Image */}
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                          <img 
+                            src={p.imageUrl} 
+                            alt={p.nameEn} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                            referrerPolicy="no-referrer"
+                          />
+                          {p.discountRate > 0 && (
+                            <span className="absolute top-1 left-1 bg-green-600 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full">
+                              -${p.discountRate * 100}%
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Middle: Text details */}
+                        <div className="flex-1 min-w-0 space-y-1 text-right">
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="product-title font-extrabold text-xs sm:text-sm transition truncate">
+                              {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
+                            </h4>
+                            {p.isFeatured && (
+                              <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-bold rounded">
+                                ★
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-[10px] sm:text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-555'}`}>
+                            {highlightText(lang === 'ar' ? p.descriptionAr : p.descriptionEn, searchQuery)}
+                          </p>
+                          
+                          <div className="flex items-center gap-2 pt-1 font-bold">
+                            {p.calories && (
+                              <span className="flex items-center gap-0.5 text-[9px] text-gray-400">
+                                <Flame className="w-3 h-3 text-amber-500" />
+                                {p.calories} Cal
+                              </span>
+                            )}
+                            {p.preparationTime && (
+                              <span className="flex items-center gap-0.5 text-[9px] text-gray-400">
+                                <Clock className="w-3 h-3 text-blue-400" />
+                                {p.preparationTime} {lang === 'ar' ? 'دقائق' : 'mins'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right: Price & Add Button */}
+                        <div className="flex flex-col items-end justify-between self-stretch shrink-0 min-h-full">
+                          {/* Share / Favorite */}
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={(e) => toggleFavorite(p.id, e)}
+                              className={`p-1.5 rounded-full transition ${
+                                isFav ? 'text-rose-600' : 'text-gray-300 hover:text-gray-500'
+                              }`}
+                            >
+                              <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                            </button>
+                          </div>
+
+                          {/* Price & Plus Button */}
+                          <div className="flex items-center gap-2 mt-auto">
+                            <div className="text-right">
+                              {p.discountRate > 0 && (
+                                <span className="text-[9px] line-through text-gray-400 block leading-none">
+                                  {p.price.toFixed(2)}
+                                </span>
+                              )}
+                              <span className="text-xs sm:text-sm font-black text-rose-600 block leading-none">
+                                {(p.price * (1 - p.discountRate)).toFixed(2)} <span className="text-[8px] font-bold"><SaudiRiyalIcon /></span>
+                              </span>
+                            </div>
+                            
+                            <span className="product-add-button p-2 rounded-xl transition shadow-xs">
+                              <Plus className="w-3.5 h-3.5" />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>          </div>
         </div>      </main>
 
       {/* Custom Premium Restaurant Website Footer */}
