@@ -123,8 +123,7 @@ export default function DigitalMenu({
       return [
         'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=1600&q=80', // Turkish chef grilling kebab/meat
         'https://images.unsplash.com/photo-1544025162-d76694265947?w=1600&q=80', // Steak preparation
-        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80', // Turkish food platter
-        'https://images.unsplash.com/photo-1525610553991-2bede1a236e2?w=1600&q=80'  // People dining together
+        'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80'  // Turkish food platter
       ];
     }
     return [
@@ -1067,30 +1066,20 @@ export default function DigitalMenu({
                         : 'bg-white border-gray-100 hover:border-rose-100'
                     }`}
                   >
-                    {/* Left: Product Image */}
-                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                      <img 
-                        src={p.imageUrl} 
-                        alt={p.nameEn} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                        referrerPolicy="no-referrer"
-                      />
-                      {p.discountRate > 0 && (
-                        <span className="absolute top-1 left-1 bg-green-600 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full">
-                          -${p.discountRate * 100}%
-                        </span>
-                      )}
-                    </div>
-
                     {/* Middle: Text details */}
                     <div className="flex-1 min-w-0 space-y-1 text-right">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <h4 className="product-title font-black text-xs sm:text-sm transition truncate">
                           {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
                         </h4>
                         {p.isFeatured && (
                           <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-bold rounded">
                             ★
+                          </span>
+                        )}
+                        {p.discountRate > 0 && (
+                          <span className="bg-green-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                            -${p.discountRate * 100}%
                           </span>
                         )}
                       </div>
@@ -1167,47 +1156,36 @@ export default function DigitalMenu({
                             : 'bg-white border-gray-100 hover:border-rose-200 hover:shadow-rose-100/70'
                         }`}
                       >
-                        {/* Product Cover image */}
-                        <div className="relative h-56 sm:h-52 overflow-hidden bg-gray-100">
-                          <img 
-                            src={p.imageUrl} 
-                            alt={p.nameEn} 
-                            className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/65 to-transparent opacity-80" />
-                          
-                          {/* Floating tags */}
-                          <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                            {p.discountRate > 0 ? (
-                              <span className="bg-green-600 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm pointer-events-auto">
-                                -${p.discountRate * 100}% {lang === 'ar' ? 'خصم' : 'OFF'}
-                              </span>
-                            ) : (
-                              <span />
-                            )}
+                        {/* Card Header (without image) */}
+                        <div className="p-5 pb-0 flex items-center justify-between">
+                          {p.discountRate > 0 ? (
+                            <span className="bg-green-600 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
+                              -${p.discountRate * 100}% {lang === 'ar' ? 'خصم' : 'OFF'}
+                            </span>
+                          ) : (
+                            <span />
+                          )}
 
-                            <div className="flex gap-1.5 pointer-events-auto">
-                              <button 
-                                onClick={(e) => toggleFavorite(p.id, e)}
-                                className={`p-2 rounded-full backdrop-blur-md shadow-sm transition ${
-                                  isFav ? 'bg-rose-600 text-white' : 'bg-black/30 text-white hover:bg-black/50'
-                                }`}
-                              >
-                                <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-                              </button>
-                              <button 
-                                onClick={(e) => handleShare(p, e)}
-                                className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition shadow-sm"
-                              >
-                                <Share2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
+                          <div className="flex gap-1.5">
+                            <button 
+                              onClick={(e) => toggleFavorite(p.id, e)}
+                              className={`p-2 rounded-full transition ${
+                                isFav ? 'bg-rose-600 text-white shadow-xs' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-300'
+                              }`}
+                            >
+                              <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                            </button>
+                            <button 
+                              onClick={(e) => handleShare(p, e)}
+                              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-300 transition"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
 
                         {/* Product Text body */}
-                        <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
+                        <div className="p-5 sm:p-6 pt-3 space-y-4 flex-1 flex flex-col justify-between">
                           <div className="space-y-1.5 text-right">
                             <h4 className="product-title font-black text-lg sm:text-base transition">
                               {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
@@ -1261,24 +1239,9 @@ export default function DigitalMenu({
                             : 'bg-white border-gray-100 hover:border-rose-100'
                         }`}
                       >
-                        {/* Left: Product Image */}
-                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                          <img 
-                            src={p.imageUrl} 
-                            alt={p.nameEn} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                            referrerPolicy="no-referrer"
-                          />
-                          {p.discountRate > 0 && (
-                            <span className="absolute top-1 left-1 bg-green-600 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full">
-                              -${p.discountRate * 100}%
-                            </span>
-                          )}
-                        </div>
-
                         {/* Middle: Text details */}
                         <div className="flex-1 min-w-0 space-y-1 text-right">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <h4 className="product-title font-extrabold text-xs sm:text-sm transition truncate">
                               {highlightText(lang === 'ar' ? p.nameAr : p.nameEn, searchQuery)}
                             </h4>
@@ -1529,38 +1492,20 @@ export default function DigitalMenu({
             darkMode ? 'bg-gray-950 text-gray-100' : 'bg-white text-gray-800'
           }`}>
             
-            {/* Image banner with embedded video support! */}
-            <div className="relative h-56 md:h-64 overflow-hidden flex-shrink-0 bg-black">
-              {selectedProduct.videoUrl ? (
-                <video 
-                  src={selectedProduct.videoUrl} 
-                  autoPlay 
-                  loop 
-                  muted 
-                  playsInline 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img 
-                  src={selectedProduct.imageUrl} 
-                  alt={selectedProduct.nameEn} 
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              )}
-
-              {/* Close Button */}
+            {/* Top Close Row */}
+            <div className="p-6 pb-0 flex items-center justify-between flex-shrink-0">
+              <div className="bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-bold">
+                <Clock className="w-3.5 h-3.5 text-blue-500" />
+                {selectedProduct.preparationTime} {lang === 'ar' ? 'دقائق للتحضير' : 'Mins prep time'}
+              </div>
               <button 
                 onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 p-2 bg-black/45 backdrop-blur-md text-white rounded-full hover:bg-black/60 transition shadow"
+                className={`p-2 rounded-full transition border ${
+                  darkMode ? 'border-gray-800 bg-gray-900 text-gray-400 hover:text-white' : 'border-gray-150 bg-gray-50 text-gray-500 hover:text-gray-900'
+                }`}
               >
                 <X className="w-4 h-4" />
               </button>
-
-              <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-white flex items-center gap-1 text-[11px] font-bold">
-                <Clock className="w-3.5 h-3.5 text-blue-400" />
-                {selectedProduct.preparationTime} {lang === 'ar' ? 'دقائق للتحضير' : 'Mins prep time'}
-              </div>
             </div>
 
             {/* Selection Body */}
@@ -1765,12 +1710,6 @@ export default function DigitalMenu({
               ) : (
                 cart.map(item => (
                   <div key={item.id} className="p-3 bg-gray-50 border border-gray-100 rounded-2xl flex gap-3 dark:bg-gray-900/30 dark:border-gray-800">
-                    <img 
-                      src={item.product.imageUrl} 
-                      alt={item.product.nameEn} 
-                      className="w-16 h-16 rounded-xl object-cover"
-                      referrerPolicy="no-referrer"
-                    />
                     <div className="flex-1 space-y-1">
                       <div className="flex items-start justify-between">
                         <h4 className="font-bold text-xs text-gray-900 dark:text-white">{lang === 'ar' ? item.product.nameAr : item.product.nameEn}</h4>
