@@ -3,21 +3,11 @@
     {
       "id": "b-1",
       "tenantId": "t-1",
-      "nameEn": "Riyadh Olaya Branch",
-      "nameAr": "ÙØ±Ø¹ Ø§Ù„Ø¹Ù„ÙŠØ§ Ø§Ù„Ø±ÙŠØ§Ø¶",
-      "addressEn": "Olaya District, Riyadh, KSA",
-      "addressAr": "Ø­ÙŠ Ø§Ù„Ø¹Ù„ÙŠØ§ØŒ Ø§Ù„Ø±ÙŠØ§Ø¶ØŒ Ø§Ù„Ù…Ù…Ù„ÙƒØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø§Ù„Ø³Ø¹ÙˆØ¯ÙŠØ©",
-      "phone": "+966 11 456 7890",
-      "isActive": true
-    },
-    {
-      "id": "b-2",
-      "tenantId": "t-1",
-      "nameEn": "Jeddah Corniche Branch",
-      "nameAr": "ÙØ±Ø¹ ÙƒÙˆØ±Ù†ÙŠØ´ Ø¬Ø¯Ø©",
-      "addressEn": "Corniche Road, Jeddah, KSA",
-      "addressAr": "Ø·Ø±ÙŠÙ‚ Ø§Ù„ÙƒÙˆØ±Ù†ÙŠØ´ØŒ Ø¬Ø¯Ø©ØŒ Ø§Ù„Ù…Ù…Ù„ÙƒØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø§Ù„Ø³Ø¹ÙˆØ¯ÙŠØ©",
-      "phone": "+966 12 654 3210",
+      "nameEn": "Khobar Olaya Branch",
+      "nameAr": "فرع العليا الخبر",
+      "addressEn": "Olaya District, Khobar, KSA",
+      "addressAr": "حي العليا، الخبر، المملكة العربية السعودية",
+      "phone": "+966 13 898 7890",
       "isActive": true
     }
   ],

@@ -921,9 +921,9 @@ export default function AdminDashboard({
               </button>
 
               <button
-                onClick={() => { setActiveTab('kitchen'); setMobileMenuOpen(false); }}
+                onClick={() => { setActiveTab('kitchen_analytics'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  activeTab === 'kitchen' ? 'bg-rose-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
+                  activeTab === 'kitchen_analytics' ? 'bg-rose-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'
                 }`}
               >
                 <ClipboardList className="w-4 h-4" />

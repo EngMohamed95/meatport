@@ -12,7 +12,11 @@ export const initialTenants: Tenant[] = [
     currencyEn: 'SAR',
     currencyAr: 'ر.س',
     descAr: 'نجمع بين عراقة المطبخ التركي وجودة المكونات الطازجة، لنقدّم لكم تجربة طعام مميزة تعكس أصالة الضيافة التركية.',
-    descEn: 'We combine the heritage of Turkish cuisine with the quality of fresh ingredients, to offer you a unique dining experience that reflects the authenticity of Turkish hospitality.'
+    descEn: 'We combine the heritage of Turkish cuisine with the quality of fresh ingredients, to offer you a unique dining experience that reflects the authenticity of Turkish hospitality.',
+    facebookUrl: '#',
+    instagramUrl: '#',
+    twitterUrl: '#',
+    whatsappNumber: '#'
   }
 ];
 
@@ -20,21 +24,11 @@ export const initialBranches: Branch[] = [
   {
     id: 'b-1',
     tenantId: 't-1',
-    nameEn: 'Riyadh Olaya Branch',
-    nameAr: 'فرع العليا الرياض',
-    addressEn: 'Olaya District, Riyadh, KSA',
-    addressAr: 'حي العليا، الرياض، المملكة العربية السعودية',
-    phone: '+966 11 456 7890',
-    isActive: true
-  },
-  {
-    id: 'b-2',
-    tenantId: 't-1',
-    nameEn: 'Jeddah Corniche Branch',
-    nameAr: 'فرع كورنيش جدة',
-    addressEn: 'Corniche Road, Jeddah, KSA',
-    addressAr: 'طريق الكورنيش، جدة، المملكة العربية السعودية',
-    phone: '+966 12 654 3210',
+    nameEn: 'Khobar Olaya Branch',
+    nameAr: 'فرع العليا الخبر',
+    addressEn: 'Olaya District, Khobar, KSA',
+    addressAr: 'حي العليا، الخبر، المملكة العربية السعودية',
+    phone: '+966 13 898 7890',
     isActive: true
   }
 ];

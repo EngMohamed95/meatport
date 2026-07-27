@@ -677,9 +677,7 @@ export default function DigitalMenu({
                   <span>{lang === 'ar' ? 'اتصال هاتفي بالفروع' : 'Call Phone'}</span>
                 </a>
                 <a 
-                  href={`https://wa.me/${tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : '966500000000'}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#"
                   className="flex items-center justify-center gap-2.5 p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-black transition border border-emerald-500/15"
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -1386,9 +1384,7 @@ export default function DigitalMenu({
             <div className="space-y-2.5">
               {/* WhatsApp Button */}
               <a 
-                href={`https://wa.me/${tenant.whatsappNumber ? tenant.whatsappNumber.replace(/[^0-9]/g, '') : (tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : '966500000000')}`}
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="#"
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-550/10 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black transition border border-emerald-500/20"
               >
                 <MessageCircle className="w-4 h-4 text-emerald-500" />
@@ -1420,9 +1416,7 @@ export default function DigitalMenu({
             <div className="flex items-center gap-2.5 flex-wrap">
               {/* Instagram */}
               <a 
-                href={tenant.instagramUrl || `https://instagram.com/${tenant.slug}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="#" 
                 className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 flex items-center justify-center hover:bg-rose-600 hover:text-white transition shadow-sm border border-rose-100/10"
                 title="Instagram"
               >
@@ -1430,9 +1424,7 @@ export default function DigitalMenu({
               </a>
               {/* Facebook */}
               <a 
-                href={tenant.facebookUrl || `https://facebook.com/${tenant.slug}`}
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="#"
                 className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition shadow-sm border border-blue-100/10"
                 title="Facebook"
               >
@@ -1440,9 +1432,7 @@ export default function DigitalMenu({
               </a>
               {/* WhatsApp Icon for channel */}
               <a 
-                href={`https://wa.me/${tenant.whatsappNumber ? tenant.whatsappNumber.replace(/[^0-9]/g, '') : (tenant.phone ? tenant.phone.replace(/[^0-9]/g, '') : '966500000000')}`}
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="#"
                 className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition shadow-sm border border-emerald-100/10"
                 title="WhatsApp Channel"
               >
@@ -1450,9 +1440,7 @@ export default function DigitalMenu({
               </a>
               {/* Twitter / X */}
               <a 
-                href={tenant.twitterUrl || `https://x.com/${tenant.slug}`}
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="#"
                 className="w-8 h-8 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-200 flex items-center justify-center hover:bg-slate-650 hover:text-white transition shadow-sm border border-slate-100/10"
                 title="X / Twitter"
               >
