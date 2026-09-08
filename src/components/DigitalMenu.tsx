@@ -640,7 +640,7 @@ export default function DigitalMenu({
                   onClick={() => setIsMobileDrawerOpen(false)}
                   className="text-xs font-extrabold py-2 px-3 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 transition"
                 >
-                  {lang === 'ar' ? 'منيو الطعام' : 'Menu'}
+                  {lang === 'ar' ? 'قائمة الطعام' : 'Menu'}
                 </a>
                 {featuredProducts.length > 0 && (
                   <a 
@@ -670,13 +670,13 @@ export default function DigitalMenu({
                   className="flex items-center justify-center gap-2.5 p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-black transition border border-blue-500/15"
                 >
                   <Phone className="w-4 h-4" />
-                  <span>{lang === 'ar' ? 'اتصال هاتفي بالفروع' : 'Call Phone'}</span>
+                  <span>{lang === 'ar' ? 'اتصل بنا' : 'Call Us'}</span>
                 </a>
                 <a 
                   href={tenant.whatsappNumber && tenant.whatsappNumber !== '#' ? `https://wa.me/${tenant.whatsappNumber.replace(/[^0-9]/g, '')}` : 'https://wa.me/966555825356'}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-center gap-2.5 p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-black transition border border-emerald-500/15"
+                  className="flex items-center justify-center gap-2.5 p-2.5 rounded-xl bg-emerald-550/10 text-emerald-600 dark:text-emerald-400 text-xs font-black transition border border-emerald-500/15"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>{lang === 'ar' ? 'راسلنا واتساب' : 'WhatsApp Us'}</span>
@@ -1329,7 +1329,7 @@ export default function DigitalMenu({
                 <h3 className="text-sm font-black tracking-tight text-gray-900 dark:text-white">
                   {lang === 'ar' ? tenant.nameAr : tenant.nameEn}
                 </h3>
-                <p className="text-[9px] text-gray-400 font-semibold">{lang === 'ar' ? (tenant.sloganAr || 'أفضل جودة وخدمة ممتازة') : (tenant.sloganEn || 'Premium Quality & Experience')}</p>
+                <p className="text-[9px] text-gray-400 font-semibold">{lang === 'ar' ? ((tenant.sloganAr && !tenant.sloganAr.includes('أفضل جودة') && !tenant.sloganAr.includes('افضل جودة')) ? tenant.sloganAr : 'مذاق أصيل، تجربة استثنائية') : (tenant.sloganEn || 'Authentic Taste, Exceptional Experience')}</p>
               </div>
             </div>
             
@@ -1348,7 +1348,7 @@ export default function DigitalMenu({
           {/* Column 2: Branches & Addresses (Dynamic based on Database) */}
           <div className="space-y-4">
             <h4 className="text-xs font-extrabold uppercase text-gray-900 dark:text-white tracking-widest pb-1 border-b border-gray-100/10 inline-block">
-              {lang === 'ar' ? 'فروعنا وعناويننا' : 'Our Branches & Locations'}
+              {lang === 'ar' ? 'فروعنا' : 'Our Branches'}
             </h4>
             <div className="space-y-4">
               {branches.filter(b => b.tenantId === tenant.id).length > 0 ? (
@@ -1386,12 +1386,12 @@ export default function DigitalMenu({
           {/* Column 3: Customer Care & Chat Options */}
           <div className="space-y-4">
             <h4 className="text-xs font-extrabold uppercase text-gray-900 dark:text-white tracking-widest pb-1 border-b border-gray-100/10 inline-block">
-              {lang === 'ar' ? 'خدمة العملاء والاتصال المباشر' : 'Customer Support & Contact'}
+              {lang === 'ar' ? 'تواصل معنا' : 'Contact Us'}
             </h4>
             <p className="text-[10px] text-gray-400 font-medium">
               {lang === 'ar'
-                ? (tenant.supportAr || 'هل لديك أي استفسار أو ترغب في تقديم طلب خاص؟ تواصل معنا مباشرة:')
-                : (tenant.supportEn || 'Have any questions or special orders? Contact our support channels directly:')}
+                ? ((tenant.supportAr && !tenant.supportAr.includes('هل لديك أي استفسار')) ? tenant.supportAr : 'للاستفسارات والطلبات الخاصة ، تواصل معنا مباشرة')
+                : (tenant.supportEn || 'For inquiries and special requests, contact our support channels directly:')}
             </p>
             <div className="space-y-2.5">
               {/* WhatsApp Button */}
@@ -1402,7 +1402,7 @@ export default function DigitalMenu({
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-550/10 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black transition border border-emerald-500/20"
               >
                 <MessageCircle className="w-4 h-4 text-emerald-500" />
-                <span>{lang === 'ar' ? 'دردشة واتساب مباشرة' : 'Direct WhatsApp Chat'}</span>
+                <span>{lang === 'ar' ? 'تواصل عبر واتساب' : 'Contact via WhatsApp'}</span>
               </a>
               {/* Phone call button */}
               <a 

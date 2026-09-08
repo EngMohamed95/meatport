@@ -19,7 +19,7 @@ async function run() {
   // 2. Load and validate FTP configuration
   const host = 'ftp.meatport.net';
   const user = 'u177160961.meatport';
-  let password = process.env.FTP_PASSWORD;
+  let password = process.env.FTP_PASSWORD || '~8TTDVloIgu';
   const remoteDir = './';
 
   if (!password) {

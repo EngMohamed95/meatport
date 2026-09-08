@@ -11,6 +11,8 @@ export const initialTenants: Tenant[] = [
     primaryColor: '#e11d48', // rose-600
     currencyEn: 'SAR',
     currencyAr: 'ر.س',
+    sloganAr: 'مذاق أصيل، تجربة استثنائية',
+    sloganEn: 'Authentic Taste, Exceptional Experience',
     descAr: 'نجمع بين عراقة المطبخ التركي وجودة المكونات الطازجة، لنقدّم لكم تجربة طعام مميزة تعكس أصالة الضيافة التركية.',
     descEn: 'We combine the heritage of Turkish cuisine with the quality of fresh ingredients, to offer you a unique dining experience that reflects the authenticity of Turkish hospitality.',
     addressAr: 'الخبر - العليا - بشار بن برد',
@@ -21,7 +23,9 @@ export const initialTenants: Tenant[] = [
     facebookUrl: '#',
     instagramUrl: '#',
     twitterUrl: '#',
-    whatsappNumber: '0555825356'
+    whatsappNumber: '0555825356',
+    supportAr: 'للاستفسارات والطلبات الخاصة ، تواصل معنا مباشرة',
+    supportEn: 'For inquiries and special requests, contact us directly'
   }
 ];
 

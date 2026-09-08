@@ -2945,7 +2945,7 @@ export default function AdminDashboard({
                           setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, sloganAr: e.target.value } : t));
                         }
                       }}
-                      placeholder="أفضل جودة وخدمة ممتازة"
+                      placeholder="مذاق أصيل، تجربة استثنائية"
                       className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
                     />
                   </div>
@@ -2959,7 +2959,7 @@ export default function AdminDashboard({
                           setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, sloganEn: e.target.value } : t));
                         }
                       }}
-                      placeholder="Premium Quality & Experience"
+                      placeholder="Authentic Taste, Exceptional Experience"
                       className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
                       dir="ltr"
                     />
@@ -3038,7 +3038,7 @@ export default function AdminDashboard({
                           setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, supportAr: e.target.value } : t));
                         }
                       }}
-                      placeholder="هل لديك أي استفسار أو ترغب في تقديم طلب خاص؟ تواصل معنا مباشرة"
+                      placeholder="للاستفسارات والطلبات الخاصة ، تواصل معنا مباشرة"
                       className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
                     />
                   </div>
@@ -3052,7 +3052,7 @@ export default function AdminDashboard({
                           setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, supportEn: e.target.value } : t));
                         }
                       }}
-                      placeholder="Have any questions or special orders? Contact our support channels directly"
+                      placeholder="For inquiries and special requests, contact us directly"
                       className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
                       dir="ltr"
                     />

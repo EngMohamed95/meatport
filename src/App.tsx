@@ -18,15 +18,23 @@ import {
 
 const normalizeMeatportTenants = (savedTenants?: Tenant[]): Tenant[] => {
   const savedMeatport = savedTenants?.find(t => t.id === 't-1');
+  const supportAr = (!savedMeatport?.supportAr || savedMeatport.supportAr.includes('هل لديك أي استفسار') || savedMeatport.supportAr.includes('هل لديك اي استفسار'))
+    ? initialTenants[0].supportAr
+    : savedMeatport.supportAr;
+  const sloganAr = (!savedMeatport?.sloganAr || savedMeatport.sloganAr.includes('أفضل جودة') || savedMeatport.sloganAr.includes('افضل جودة'))
+    ? initialTenants[0].sloganAr
+    : savedMeatport.sloganAr;
   return [{
     ...initialTenants[0],
     ...savedMeatport,
+    sloganAr,
     phone: initialTenants[0].phone,
     addressAr: initialTenants[0].addressAr,
     addressEn: initialTenants[0].addressEn,
     hoursAr: initialTenants[0].hoursAr,
     hoursEn: initialTenants[0].hoursEn,
     whatsappNumber: initialTenants[0].whatsappNumber,
+    supportAr,
   }];
 };
 
