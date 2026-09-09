@@ -507,24 +507,15 @@ export default function DigitalMenu({
       }`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
-          {/* Logo & Brand Name */}
-          <div className="flex items-center gap-2.5">
+          {/* Brand Logo Only */}
+          <a href="#hero" className="flex items-center group transition-transform duration-200 hover:scale-105" title={tenant.nameEn}>
             <img 
-              src={tenant.logoUrl} 
-              alt={tenant.nameEn} 
-              className="w-10 h-10 rounded-xl object-cover border border-gray-250 shadow-xs bg-white"
+              src={tenant.logoUrl || '/logo.png'} 
+              alt={tenant.nameEn || 'Meat Port'} 
+              className="h-10 sm:h-12 w-auto max-w-[170px] object-contain dark:bg-white/95 dark:p-1 dark:rounded-xl"
               referrerPolicy="no-referrer"
             />
-            <div className="text-right">
-              <h1 className="text-xs sm:text-sm font-black tracking-tight leading-none mb-0.5">
-                {lang === 'ar' ? tenant.nameAr : tenant.nameEn}
-              </h1>
-              <p className="text-[8px] sm:text-[9px] text-gray-400 flex items-center gap-1 font-bold leading-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {lang === 'ar' ? 'مفتوح للطلبات الآن' : 'Open for orders now'}
-              </p>
-            </div>
-          </div>
+          </a>
 
           {/* Desktop Nav Links (Hidden on Mobile) */}
           <div className="hidden md:flex items-center gap-6 text-xs font-bold text-gray-500 dark:text-gray-400">
@@ -610,14 +601,13 @@ export default function DigitalMenu({
             <div className="space-y-6">
               {/* Header inside drawer */}
               <div className="flex items-center justify-between border-b pb-4 dark:border-gray-800">
-                <div className="flex items-center gap-2">
+                <a href="#hero" onClick={() => setIsMobileDrawerOpen(false)} className="flex items-center">
                   <img 
-                    src={tenant.logoUrl} 
-                    alt={tenant.nameEn} 
-                    className="w-8 h-8 rounded-lg object-cover"
+                    src={tenant.logoUrl || '/logo.png'} 
+                    alt={tenant.nameEn || 'Meat Port'} 
+                    className="h-9 w-auto object-contain dark:bg-white/95 dark:p-1 dark:rounded-lg"
                   />
-                  <span className="text-xs font-black">{lang === 'ar' ? tenant.nameAr : tenant.nameEn}</span>
-                </div>
+                </a>
                 <button 
                   onClick={() => setIsMobileDrawerOpen(false)}
                   className="p-1.5 rounded-lg border dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -707,7 +697,7 @@ export default function DigitalMenu({
               {/* Working hours display */}
               <div className="text-[9px] text-gray-400 flex items-center justify-center gap-1 font-bold">
                 <Clock className="w-3 h-3 text-[var(--tenant-primary)] animate-pulse" />
-                <span>{lang === 'ar' ? (tenant.hoursAr || 'ساعات العمل: ١٢ ظهراً - ٢ ليلاً') : (tenant.hoursEn || 'Opening Hours: 12 PM - 2 AM')}</span>
+                <span>{lang === 'ar' ? (tenant.hoursAr || 'ساعات العمل: ١١ صباحاً - ٢ ليلاً') : (tenant.hoursEn || 'Opening Hours: 11 AM - 2 AM')}</span>
               </div>
             </div>
           </div>
@@ -753,7 +743,7 @@ export default function DigitalMenu({
                     : 'Indulge in our carefully crafted menu, prepared fresh daily by premium chefs using locally sourced fresh ingredients and traditional recipes.'))}
             </p>
             <div className="mt-2.5 flex items-center gap-2.5 text-[8px] text-gray-400 font-semibold">
-              <span>⏰ {lang === 'ar' ? '١٢ ظهراً - ٢ ليلاً' : '12 PM - 2 AM'}</span>
+              <span>⏰ {lang === 'ar' ? (tenant.hoursAr ? tenant.hoursAr.replace('ساعات العمل: ', '') : '١١ صباحاً - ٢ ليلاً') : (tenant.hoursEn ? tenant.hoursEn.replace('Opening Hours: ', '') : '11 AM - 2 AM')}</span>
               <span>•</span>
               <span>📍 {lang === 'ar' ? 'الخبر - العليا - بشار بن برد' : 'Khobar - Olaya - Bashar Bin Burd'}</span>
             </div>
@@ -1316,22 +1306,16 @@ export default function DigitalMenu({
         {/* Main Footer Content */}
         <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
           
-          {/* Column 1: Brand & Slogan */}
+          {/* Column 1: Brand Logo & Information */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
+            <a href="#hero" className="inline-block transition-transform duration-200 hover:scale-105" title={tenant.nameEn}>
               <img 
-                src={tenant.logoUrl} 
-                alt={tenant.nameEn} 
-                className="w-12 h-12 rounded-2xl object-cover border shadow-xs bg-white"
+                src={tenant.logoUrl || '/logo.png'} 
+                alt={tenant.nameEn || 'Meat Port'} 
+                className="h-16 sm:h-20 w-auto max-w-[200px] object-contain dark:bg-white/95 dark:p-2 dark:rounded-2xl"
                 referrerPolicy="no-referrer"
               />
-              <div>
-                <h3 className="text-sm font-black tracking-tight text-gray-900 dark:text-white">
-                  {lang === 'ar' ? tenant.nameAr : tenant.nameEn}
-                </h3>
-                <p className="text-[9px] text-gray-400 font-semibold">{lang === 'ar' ? ((tenant.sloganAr && !tenant.sloganAr.includes('أفضل جودة') && !tenant.sloganAr.includes('افضل جودة')) ? tenant.sloganAr : 'مذاق أصيل، تجربة استثنائية') : (tenant.sloganEn || 'Authentic Taste, Exceptional Experience')}</p>
-              </div>
-            </div>
+            </a>
             
             <p className="text-[10px] text-gray-400 leading-relaxed font-medium">
               {lang === 'ar' 
@@ -1341,7 +1325,7 @@ export default function DigitalMenu({
 
             <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold">
               <Clock className="w-3.5 h-3.5 text-[var(--tenant-primary)]" />
-              <span>{lang === 'ar' ? (tenant.hoursAr || 'ساعات العمل: ١٢ ظهراً - ٢ ليلاً') : (tenant.hoursEn || 'Opening Hours: 12 PM - 2 AM')}</span>
+              <span>{lang === 'ar' ? (tenant.hoursAr || 'ساعات العمل: ١١ صباحاً - ٢ ليلاً') : (tenant.hoursEn || 'Opening Hours: 11 AM - 2 AM')}</span>
             </div>
           </div>
 

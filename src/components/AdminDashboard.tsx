@@ -3,7 +3,8 @@ import {
   Plus, Edit2, Trash2, ArrowUp, ArrowDown, Download, Upload, Check, X, 
   Settings, Layers, DollarSign, Package, AlertTriangle, ListFilter, FileText,
   TrendingUp, Activity, Shuffle, Eye, EyeOff, Tag, Clock, Flame, Percent,
-  Warehouse, Users, ChefHat, Menu, ShoppingBag, Archive, ClipboardList
+  Warehouse, Users, ChefHat, Menu, ShoppingBag, Archive, ClipboardList,
+  Globe, Languages
 } from 'lucide-react';
 import { Product, Category, ModifierGroup, AuditLog, Tenant, Branch, Ingredient, RecipeItem, Order, OrderItem } from '../types';
 
@@ -18,7 +19,8 @@ interface AdminDashboardProps {
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   addAuditLog: (action: string, entityName: string, entityId: string, details: string) => void;
-  lang: 'en' | 'ar';
+  lang?: 'en' | 'ar';
+  setLang?: (lang: 'en' | 'ar') => void;
   ingredients: Ingredient[];
   setIngredients: React.Dispatch<React.SetStateAction<Ingredient[]>>;
   recipes: RecipeItem[];
@@ -45,7 +47,8 @@ export default function AdminDashboard({
   setProducts,
   setCategories,
   addAuditLog,
-  lang,
+  lang: propLang = 'ar',
+  setLang,
   ingredients,
   setIngredients,
   recipes,
@@ -60,6 +63,29 @@ export default function AdminDashboard({
   setDarkMode,
   setBranches
 }: AdminDashboardProps) {
+  const [localLang, setLocalLang] = useState<'en' | 'ar'>(() => {
+    return propLang || (localStorage.getItem('saas_lang') as 'en' | 'ar') || 'ar';
+  });
+
+  useEffect(() => {
+    if (propLang) {
+      setLocalLang(propLang);
+    }
+  }, [propLang]);
+
+  const lang = setLang ? propLang : localLang;
+
+  const toggleLanguage = () => {
+    const next = (lang === 'ar' ? 'en' : 'ar') as 'en' | 'ar';
+    if (setLang) {
+      setLang(next);
+    } else {
+      setLocalLang(next);
+    }
+    localStorage.setItem('saas_lang', next);
+    document.documentElement.lang = next;
+    document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr';
+  };
   // Dynamically calculate the active tab from the URL pathname
   const activeTab = (() => {
     if (currentPath === '/staff/categories') return 'categories';
@@ -869,7 +895,7 @@ export default function AdminDashboard({
 
           <div className="flex items-center gap-3 pb-4 mb-2">
             {tenant.logoUrl ? (
-              <img src={tenant.logoUrl} alt={tenant.nameEn} className="w-10 h-10 rounded-xl object-cover bg-white shadow-xs border border-gray-100" />
+              <img src={tenant.logoUrl} alt={tenant.nameEn} className="w-10 h-10 rounded-xl object-contain p-0.5 bg-white shadow-xs border border-gray-100" />
             ) : (
               <div className="w-10 h-10 rounded-xl bg-rose-600/10 text-rose-600 flex items-center justify-center font-black text-lg">
                 MP
@@ -963,13 +989,28 @@ export default function AdminDashboard({
           </div>
         </div>
 
-        <div className="pt-4 space-y-3 border-t border-gray-100/10">
+        <div className="pt-4 space-y-2.5 border-t border-gray-100/10">
+          {/* Mobile Language Switcher */}
+          <button
+            onClick={toggleLanguage}
+            type="button"
+            className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-200 font-bold rounded-xl text-xs border border-gray-200/80 dark:border-gray-700/80 transition cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-rose-600" />
+              <span>{lang === 'ar' ? 'اللغة / Language' : 'Language / اللغة'}</span>
+            </div>
+            <span className="text-[10px] font-black text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md">
+              {lang === 'ar' ? 'English' : 'العربية'}
+            </span>
+          </button>
+
           {activeStaff && (
             <div className="flex items-center gap-2 px-1">
               <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center font-bold text-xs">
                 M
               </div>
-              <div className="min-w-0 text-right">
+              <div className="min-w-0 text-left rtl:text-right">
                 <span className="block text-[11px] font-black text-gray-900 dark:text-white truncate">
                   {activeStaff.name}
                 </span>
@@ -998,7 +1039,7 @@ export default function AdminDashboard({
           {/* Logo & Brand title */}
           <div className="flex items-center gap-3 pb-4 mb-2">
             {tenant.logoUrl ? (
-              <img src={tenant.logoUrl} alt={tenant.nameEn} className="w-10 h-10 rounded-xl object-cover bg-white shadow-xs border border-gray-100" />
+              <img src={tenant.logoUrl} alt={tenant.nameEn} className="w-10 h-10 rounded-xl object-contain p-0.5 bg-white shadow-xs border border-gray-100" />
             ) : (
               <div className="w-10 h-10 rounded-xl bg-rose-600/10 text-rose-600 flex items-center justify-center font-black text-lg">
                 MP
@@ -1108,13 +1149,28 @@ export default function AdminDashboard({
         </div>
 
         {/* Sidebar Footer: Active Session / Logout */}
-        <div className="pt-4 space-y-3">
+        <div className="pt-4 space-y-2.5 border-t border-gray-100/10">
+          {/* Language Switcher in Desktop Sidebar */}
+          <button
+            onClick={toggleLanguage}
+            type="button"
+            className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-750 dark:text-gray-200 font-bold rounded-xl text-xs border border-gray-200/80 dark:border-gray-700/80 transition cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-rose-600" />
+              <span>{lang === 'ar' ? 'اللغة / Language' : 'Language / اللغة'}</span>
+            </div>
+            <span className="text-[10px] font-black text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md">
+              {lang === 'ar' ? 'English' : 'العربية'}
+            </span>
+          </button>
+
           {activeStaff && (
             <div className="flex items-center gap-2 px-1">
               <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center font-bold text-xs">
                 M
               </div>
-              <div className="min-w-0 text-right">
+              <div className="min-w-0 text-left rtl:text-right">
                 <span className="block text-[11px] font-black text-gray-900 dark:text-white truncate">
                   {activeStaff.name}
                 </span>
@@ -1153,7 +1209,21 @@ export default function AdminDashboard({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            {/* Language Switcher Button in Top Navbar */}
+            <button 
+              onClick={toggleLanguage}
+              type="button"
+              className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-black rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-750 dark:text-gray-200 hover:border-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/40 dark:hover:bg-rose-950/20 transition shadow-xs cursor-pointer select-none"
+              title={lang === 'ar' ? 'التحويل إلى اللغة الإنجليزية (Switch to English)' : 'Switch to Arabic (التحويل إلى العربية)'}
+            >
+              <Globe className="w-4 h-4 text-rose-600" />
+              <span>{lang === 'ar' ? 'English' : 'العربية'}</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-mono font-bold">
+                {lang === 'ar' ? 'EN' : 'AR'}
+              </span>
+            </button>
+
             {/* Export / Import Buttons */}
             <button 
               onClick={handleExportCSV}
@@ -1202,7 +1272,7 @@ export default function AdminDashboard({
               <div className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg">
                 <Package className="w-5 h-5" />
               </div>
-              <div className="text-right">
+              <div className="text-left rtl:text-right">
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                   {lang === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}
                 </span>
@@ -1214,7 +1284,7 @@ export default function AdminDashboard({
               <div className="p-3 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 rounded-lg">
                 <Layers className="w-5 h-5" />
               </div>
-              <div className="text-right">
+              <div className="text-left rtl:text-right">
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                   {lang === 'ar' ? 'إجمالي الفئات' : 'Total Categories'}
                 </span>
@@ -1226,7 +1296,7 @@ export default function AdminDashboard({
               <div className="p-3 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-lg">
                 <TrendingUp className="w-5 h-5" />
               </div>
-              <div className="text-right">
+              <div className="text-left rtl:text-right">
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                   {lang === 'ar' ? 'متوسط الربح' : 'Avg. Margin'}
                 </span>
@@ -1238,7 +1308,7 @@ export default function AdminDashboard({
               <div className="p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-lg">
                 <AlertTriangle className="w-5 h-5 animate-bounce-slow" />
               </div>
-              <div className="text-right">
+              <div className="text-left rtl:text-right">
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
                   {lang === 'ar' ? 'نقص المخزون' : 'Stock Alerts'}
                 </span>
@@ -2276,7 +2346,7 @@ export default function AdminDashboard({
       )}
 
       {activeTab === 'kitchen_analytics' && (
-        <div className="space-y-6 text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="space-y-6 text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
           
           {/* Section Heading */}
           <div className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 flex items-center justify-between">
@@ -2466,7 +2536,7 @@ export default function AdminDashboard({
       )}
 
       {activeTab === 'settings' && (
-        <div className="bg-white dark:bg-gray-905 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-6 shadow-xs space-y-6 text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="bg-white dark:bg-gray-905 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.035)] p-6 shadow-xs space-y-6 text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
           <div className="border-b border-gray-100/10 pb-4">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <span>⚙️</span>
@@ -2480,7 +2550,7 @@ export default function AdminDashboard({
           <div className="space-y-4">
             {/* Delivery toggle row */}
             <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40">
-              <div className="space-y-1 text-right">
+              <div className="space-y-1 text-left rtl:text-right">
                 <span className="text-xs font-bold text-gray-800 dark:text-white block">
                   {lang === 'ar' ? 'تفعيل خدمة التوصيل للمنازل (Delivery)' : 'Enable Home Delivery Service'}
                 </span>
@@ -2523,7 +2593,7 @@ export default function AdminDashboard({
 
               {/* Theme Selector */}
               <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40">
-                <div className="space-y-1 text-right">
+                <div className="space-y-1 text-left rtl:text-right">
                   <span className="text-xs font-bold text-gray-800 dark:text-white block">
                     {lang === 'ar' ? 'وضع مظهر الموقع الافتراضي' : 'Default Theme Mode'}
                   </span>
@@ -2542,7 +2612,7 @@ export default function AdminDashboard({
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
                       !darkMode 
                         ? 'bg-rose-600 text-white shadow-xs' 
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                        : 'bg-white dark:bg-gray-800 text-gray-750 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
                     }`}
                   >
                     ☀️ {lang === 'ar' ? 'فاتح' : 'Light'}
@@ -2557,7 +2627,7 @@ export default function AdminDashboard({
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
                       darkMode 
                         ? 'bg-rose-600 text-white shadow-xs' 
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                        : 'bg-white dark:bg-gray-800 text-gray-750 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
                     }`}
                   >
                     🌙 {lang === 'ar' ? 'داكن' : 'Dark'}
@@ -2567,7 +2637,7 @@ export default function AdminDashboard({
 
               {/* Color Settings */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-2 text-right">
+                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-2 text-left rtl:text-right">
                   <label className="text-xs font-bold text-gray-800 dark:text-white block">
                     {lang === 'ar' ? 'اللون الأساسي للهوية' : 'Primary Brand Color'}
                   </label>
@@ -2596,7 +2666,7 @@ export default function AdminDashboard({
                   </div>
                 </div>
 
-                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-2 text-right">
+                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-2 text-left rtl:text-right">
                   <label className="text-xs font-bold text-gray-800 dark:text-white block">
                     {lang === 'ar' ? 'اللون الثانوي للهوية' : 'Secondary Brand Color'}
                   </label>
@@ -2627,7 +2697,7 @@ export default function AdminDashboard({
               </div>
 
               {/* Logo Settings */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-left rtl:text-right">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   <div className="md:col-span-2 space-y-2">
                     <label className="text-xs font-bold text-gray-800 dark:text-white block">
@@ -2711,7 +2781,7 @@ export default function AdminDashboard({
               </div>
 
               {/* Multiple Branches & Locations Management */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-left rtl:text-right">
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100/10">
                   <div>
                     <h5 className="text-xs font-bold text-gray-850 dark:text-white">
@@ -2848,7 +2918,7 @@ export default function AdminDashboard({
               </div>
 
               {/* Social Media Links & Chat Customization */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-left rtl:text-right">
                 <div>
                   <h5 className="text-xs font-bold text-gray-800 dark:text-white">
                     {lang === 'ar' ? 'روابط التواصل الاجتماعي ورقم الواتساب' : 'Social Channels & WhatsApp'}
@@ -2923,7 +2993,72 @@ export default function AdminDashboard({
               </div>
 
               {/* Footer Customization Fields */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-right">
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-left rtl:text-right">         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رقم الواتساب للمتجر' : 'WhatsApp Chat Number'}</label>
+                    <input
+                      type="text"
+                      value={tenant.whatsappNumber || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, whatsappNumber: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="966500000000"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رابط حساب الانستجرام (Instagram)' : 'Instagram URL'}</label>
+                    <input
+                      type="text"
+                      value={tenant.instagramUrl || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, instagramUrl: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="https://instagram.com/yourbrand"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رابط حساب الفيسبوك (Facebook)' : 'Facebook URL'}</label>
+                    <input
+                      type="text"
+                      value={tenant.facebookUrl || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, facebookUrl: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="https://facebook.com/yourbrand"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-700 dark:text-gray-300 block">{lang === 'ar' ? 'رابط حساب تويتر / إكس (Twitter/X)' : 'Twitter / X URL'}</label>
+                    <input
+                      type="text"
+                      value={tenant.twitterUrl || ''}
+                      onChange={(e) => {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, twitterUrl: e.target.value } : t));
+                        }
+                      }}
+                      placeholder="https://x.com/yourbrand"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Customization Fields */}
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40 space-y-4 text-left rtl:text-right">
                 <div>
                   <h5 className="text-xs font-bold text-gray-800 dark:text-white">
                     {lang === 'ar' ? 'تخصيص نصوص الفوتر' : 'Footer Content Customization'}
@@ -3007,7 +3142,7 @@ export default function AdminDashboard({
                           setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, hoursAr: e.target.value } : t));
                         }
                       }}
-                      placeholder="ساعات العمل: ١٢ ظهراً - ٢ ليلاً"
+                      placeholder="ساعات العمل: ١١ صباحاً - ٢ ليلاً"
                       className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs"
                     />
                   </div>
@@ -3021,7 +3156,7 @@ export default function AdminDashboard({
                           setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, hoursEn: e.target.value } : t));
                         }
                       }}
-                      placeholder="Opening Hours: 12 PM - 2 AM"
+                      placeholder="Opening Hours: 11 AM - 2 AM"
                       className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-left"
                       dir="ltr"
                     />
