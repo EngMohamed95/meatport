@@ -4,6 +4,8 @@ const { execSync } = require('child_process');
 require('dotenv').config();
 
 const DIST_DIR = path.join(__dirname, '..', 'dist');
+const apiOnly = process.argv.includes('--api-only');
+const uploadDir = apiOnly ? path.join(DIST_DIR, 'api') : DIST_DIR;
 
 async function run() {
   // 1. Ensure basic-ftp is installed
@@ -20,7 +22,7 @@ async function run() {
   const host = 'ftp.meatport.net';
   const user = 'u177160961.meatport';
   let password = process.env.FTP_PASSWORD || '~8TTDVloIgu';
-  const remoteDir = './';
+  const remoteDir = apiOnly ? './api' : './';
 
   if (!password) {
     const readline = require('readline');
@@ -71,8 +73,8 @@ async function run() {
     console.log(`Navigating to remote directory: ${remoteDir}...`);
     await client.ensureDir(remoteDir);
 
-    console.log('Uploading compiled build files (contents of dist/)...');
-    await client.uploadFromDir(DIST_DIR);
+    console.log(apiOnly ? 'Uploading API files only...' : 'Uploading compiled build files (contents of dist/)...');
+    await client.uploadFromDir(uploadDir);
 
     console.log('\n🎉 SUCCESS: Deployment completed successfully to meatport.net!');
   } catch (err) {

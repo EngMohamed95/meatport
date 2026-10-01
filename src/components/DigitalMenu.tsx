@@ -40,6 +40,7 @@ interface DigitalMenuProps {
   setLang: (l: 'en' | 'ar') => void;
   darkMode: boolean;
   setDarkMode: (d: boolean) => void;
+  nationalDayTheme?: boolean;
   onPlaceOrder: (
     orderMetadata: {
       receiptNumber: string;
@@ -82,8 +83,31 @@ export default function DigitalMenu({
   setLang,
   darkMode,
   setDarkMode,
+  nationalDayTheme = false,
   onPlaceOrder
 }: DigitalMenuProps) {
+  // Saudi National Day brand identity colors (from GEA guideline: deep green base,
+  // "Authenticity" green #5aba1c and "Vision" gold #7c5d21 accents).
+  const ND_PRIMARY = '#0b6e3d';
+  const ND_DARK = '#0b3b2c';
+  const ND_DARKER = '#082a20';
+  const ND_GOLD = '#c9a24b';
+  const ND_CREAM = '#f5efdd';
+  const effectivePrimary = nationalDayTheme ? ND_PRIMARY : (tenant.primaryColor || '#e11d48');
+
+  // Load the "Cairo" typeface (bold geometric Arabic/Latin pairing, close to the
+  // guideline's blocky "Saudi Font") only while the National Day theme is active.
+  useEffect(() => {
+    if (!nationalDayTheme) return;
+    const linkId = 'nd-cairo-font';
+    if (document.getElementById(linkId)) return;
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap';
+    document.head.appendChild(link);
+  }, [nationalDayTheme]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -119,19 +143,22 @@ export default function DigitalMenu({
 
   // Hero slider background images
   const heroImages = useMemo(() => {
+    const nationalDaySlide = ['/tenants/meatport/assets/national-day/hero-family.jpg']; // from the GEA brand guideline
     if (tenant.id === 't-1') {
       return [
+        ...(nationalDayTheme ? nationalDaySlide : []),
         'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=1600&q=80', // Turkish chef grilling kebab/meat
         'https://images.unsplash.com/photo-1544025162-d76694265947?w=1600&q=80', // Steak preparation
         'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80'  // Turkish food platter
       ];
     }
     return [
+      ...(nationalDayTheme ? nationalDaySlide : []),
       'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1600&q=80', // Pizza making
       'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1600&q=80', // Fresh pizza
       'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600&q=80'  // Chef in kitchen
     ];
-  }, [tenant.id]);
+  }, [tenant.id, nationalDayTheme]);
 
   const [activeHeroImageIndex, setActiveHeroImageIndex] = useState(0);
 
@@ -461,15 +488,15 @@ export default function DigitalMenu({
   const cartTotal = cartSubtotal + taxAmount;
 
   return (
-    <div 
-      className={`min-h-screen font-sans transition-colors duration-300 ${
+    <div
+      className={`min-h-screen font-sans transition-colors duration-300 relative isolate ${nationalDayTheme ? 'nd-active' : ''} ${
         darkMode ? 'bg-gray-950 text-gray-100' : 'bg-gray-50/50 text-gray-800'
-      }`} 
+      }`}
       dir={lang === 'ar' ? 'rtl' : 'ltr'}
     >
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
-          --tenant-primary: ${tenant.primaryColor || '#e11d48'};
+          --tenant-primary: ${effectivePrimary};
         }
         .text-rose-600 { color: var(--tenant-primary) !important; }
         .text-rose-500 { color: var(--tenant-primary) !important; }
@@ -479,12 +506,12 @@ export default function DigitalMenu({
         .hover\\:bg-rose-600:hover { filter: brightness(0.9) !important; }
         .border-rose-600 { border-color: var(--tenant-primary) !important; }
         .border-rose-500 { border-color: var(--tenant-primary) !important; }
-        .bg-rose-5 { background-color: ${tenant.primaryColor || '#e11d48'}1a !important; }
+        .bg-rose-5 { background-color: ${effectivePrimary}1a !important; }
         .text-rose-900 { color: var(--tenant-primary) !important; }
         .hover\\:text-rose-400:hover { color: var(--tenant-primary) !important; }
         .focus\\:border-rose-600:focus { border-color: var(--tenant-primary) !important; }
         .focus\\:ring-rose-600:focus { --tw-ring-color: var(--tenant-primary) !important; }
-        
+
         @keyframes bounce-short {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
@@ -499,12 +526,65 @@ export default function DigitalMenu({
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        ${nationalDayTheme ? `
+        .nd-active, .nd-active * {
+          font-family: 'Cairo', 'Tajawal', sans-serif !important;
+        }
+        .from-rose-600, .from-rose-500 { --tw-gradient-from: ${ND_PRIMARY} var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .to-red-800, .to-amber-500 { --tw-gradient-to: ${ND_DARK} var(--tw-gradient-to-position) !important; }
+        .shadow-rose-500\\/25, .shadow-rose-500\\/20, .shadow-rose-500\\/30 { --tw-shadow-color: ${ND_PRIMARY}55 !important; }
+        /* Authentic secondary pattern lifted from the GEA National Day brand guideline
+           (page 25, "Authenticity" trait) — tiled at low opacity with a blend mode so
+           the bright-green artwork reads as a subtle woven texture on dark green. */
+        .nd-checker {
+          background-image: url('/tenants/meatport/assets/national-day/pattern-lattice.png');
+          background-size: 120px 120px;
+          background-repeat: repeat;
+          background-color: ${ND_DARK};
+          mix-blend-mode: overlay;
+        }
+        .nd-ribbon {
+          background: linear-gradient(135deg, ${ND_DARKER} 0%, ${ND_DARK} 55%, ${ND_PRIMARY} 100%);
+          border-bottom: 2px solid ${ND_GOLD};
+        }
+        .nd-pattern-card {
+          position: relative;
+          overflow: hidden;
+        }
+        .nd-pattern-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image: url('/tenants/meatport/assets/national-day/pattern-checker.png');
+          background-size: 64px 64px;
+          background-repeat: repeat;
+          opacity: 0.16;
+          mix-blend-mode: overlay;
+          pointer-events: none;
+        }
+        ` : ''}
       ` }} />
       
+      {/* Saudi National Day identity ribbon (only visible while the theme is enabled) */}
+      {nationalDayTheme && (
+        <div className="nd-ribbon relative z-46 w-full overflow-hidden">
+          <div className="nd-checker absolute inset-0 opacity-40 pointer-events-none" />
+          <div className="relative max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-center gap-2 text-center">
+            <span className="text-sm">🇸🇦</span>
+            <span className="text-[10px] sm:text-xs font-black tracking-wide" style={{ color: ND_CREAM }}>
+              {lang === 'ar' ? 'اليوم الوطني السعودي  •  عزّنا بطبعنا' : 'Saudi National Day  •  Our Pride Is In Our Nature'}
+            </span>
+            <span className="text-sm">🇸🇦</span>
+          </div>
+        </div>
+      )}
+
       {/* Standalone Responsive Website Sticky Header */}
       <nav className={`sticky top-0 z-45 w-full px-4 sm:px-6 py-3.5 shadow-sm border-b transition-colors duration-300 ${
         darkMode ? 'bg-gray-900/95 border-gray-800 backdrop-blur-md text-white' : 'bg-white/95 border-gray-100 backdrop-blur-md text-gray-800'
-      }`}>
+      }`}
+      style={nationalDayTheme ? { borderBottomColor: ND_GOLD, borderBottomWidth: '2px' } : undefined}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Brand Logo Only */}
@@ -718,7 +798,9 @@ export default function DigitalMenu({
               key={idx}
               className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
               style={{
-                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.85)), url(${img})`,
+                backgroundImage: nationalDayTheme
+                  ? `linear-gradient(to bottom, ${ND_DARKER}66, ${ND_DARKER}e6), url(${img})`
+                  : `linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.85)), url(${img})`,
                 opacity: activeHeroImageIndex === idx ? 1 : 0,
               }}
             />
@@ -927,9 +1009,9 @@ export default function DigitalMenu({
                 onClick={() => handleCategorySelect('all')}
                 className={`group relative rounded-2xl border p-2 md:p-3 text-center md:text-right transition-all duration-300 flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full cursor-pointer ${
                   selectedCategory === 'all'
-                    ? 'border-transparent bg-gradient-to-br from-rose-600 to-red-800 text-white shadow-lg shadow-rose-500/25'
-                    : darkMode 
-                      ? 'border-white/10 bg-gray-900/80 text-gray-200 hover:border-rose-500/50' 
+                    ? `border-transparent bg-gradient-to-br from-rose-600 to-red-800 text-white shadow-lg shadow-rose-500/25 ${nationalDayTheme ? 'nd-pattern-card' : ''}`
+                    : darkMode
+                      ? 'border-white/10 bg-gray-900/80 text-gray-200 hover:border-rose-500/50'
                       : 'border-gray-200 bg-white text-gray-900 hover:border-rose-200 hover:shadow-md'
                 }`}
               >
@@ -1002,12 +1084,12 @@ export default function DigitalMenu({
                     : (lang === 'ar' ? 'كل الوجبات' : 'All Items')}
                 </h4>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <span className="rounded-full bg-rose-600 px-3 py-1 text-xs font-black text-white shadow-lg shadow-rose-500/20">
-                  {tenantProducts.length} {lang === 'ar' ? 'منتج' : 'items'}
+                  {`${tenantProducts.length} ${lang === 'ar' ? 'منتج' : 'items'}`}
                 </span>
-                
+
                 {/* View Switcher toggle (Desktop only) */}
                 <div className="hidden md:flex items-center gap-1 border rounded-xl p-1 bg-white dark:bg-gray-900 border-gray-200/50 dark:border-gray-800 shrink-0 shadow-xs">
                   <button 
@@ -1037,7 +1119,6 @@ export default function DigitalMenu({
             </div>
 
             {/* Products Loop */}
-            
             {/* Mobile View: Always Compact Horizontal Cards */}
             <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
               {tenantProducts.map(p => {
@@ -1294,7 +1375,8 @@ export default function DigitalMenu({
                   })}
                 </div>
               )}
-            </div>          </div>
+            </div>
+          </div>
         </div>      </main>
 
       {/* Custom Premium Restaurant Website Footer */}

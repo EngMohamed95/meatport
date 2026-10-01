@@ -1,6 +1,6 @@
 import { Category, Product } from './types';
 
-export const meatportCatalogVersion = 'meatport-catalog-v4-2026-09-13-live';
+export const meatportCatalogVersion = 'meatport-catalog-v5-2026-09-15-mysql';
 
 export const meatportCategories: Category[] = [
   {
@@ -3614,3 +3614,38 @@ export const meatportProducts: Product[] = [
     "discountRate": 0
   }
 ];
+
+// Cashier is the pricing source of truth. These corrections also provide a
+// reliable fallback while the shared MySQL API is temporarily unavailable.
+const cashierPriceOverrides: Record<string, number> = {
+  'mp-p-057': 22,
+  'mp-p-060': 39,
+  'mp-p-062': 22,
+  'mp-p-new-fattoush': 22,
+  'mp-p-042': 19,
+  'mp-p-052': 12,
+  'mp-p-053': 15,
+  'mp-p-027': 48,
+  'mp-p-039': 140,
+  'mp-p-067': 19,
+  'mp-p-078': 59,
+  'mp-p-079': 95,
+  'mp-p-081': 35,
+};
+
+meatportProducts.forEach(product => {
+  const correctedPrice = cashierPriceOverrides[product.id];
+  if (correctedPrice !== undefined) {
+    product.price = correctedPrice;
+    product.profit = Math.max(0, correctedPrice - product.costPrice);
+    product.margin = correctedPrice > 0 ? (product.profit / correctedPrice) * 100 : 0;
+  }
+  if (product.id === 'mp-p-067') {
+    product.nameEn = 'CHEF SOUP';
+    product.nameAr = 'شوربة الشيف';
+    product.descriptionEn = "Chef's daily soup.";
+    product.descriptionAr = 'شوربة الشيف اليومية.';
+    product.isVisible = true;
+  }
+  if (product.id === 'mp-p-069' || product.id === 'mp-p-070') product.isVisible = false;
+});

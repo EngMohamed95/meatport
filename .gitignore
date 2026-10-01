@@ -1,4 +1,6 @@
 node_modules/
+public/api/config.local.php
+.national-day-theme.local.json
 build/
 dist/
 coverage/
@@ -12,4 +14,3 @@ node-portable.zip
 .tmp_inspect_downloaded/
 *.xlsx
 .agents/
-

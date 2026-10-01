@@ -1,0 +1,11 @@
+Options -Indexes
+
+<Files "config.local.php">
+  Require all denied
+</Files>
+
+<IfModule !mod_authz_core.c>
+  <Files "config.local.php">
+    Deny from all
+  </Files>
+</IfModule>

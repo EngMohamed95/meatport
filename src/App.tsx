@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   initialTenants, initialBranches, initialCategories, 
   initialModifierGroups, initialProducts, initialAuditLogs,
@@ -43,6 +43,10 @@ const normalizeMeatportTenants = (savedTenants?: Tenant[]): Tenant[] => {
 };
 
 export default function App() {
+  const managerPinRef = useRef('');
+  const [remoteMenuReady, setRemoteMenuReady] = useState(false);
+  const [remoteSyncStatus, setRemoteSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
   // Global States
   const [tenants, setTenants] = useState<Tenant[]>(() => {
     const saved = localStorage.getItem(`saas_tenants`);
@@ -278,6 +282,48 @@ export default function App() {
     return 'digital-menu';
   })();
 
+  // The production menu is shared through a server-side JSON file. LocalStorage
+  // remains a fast local cache, while this endpoint is the source of truth.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRemoteMenu = async () => {
+      try {
+        const response = await fetch(`/api/menu-data.php?t=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Menu API returned ${response.status}`);
+        const data = await response.json();
+        if (cancelled) return;
+
+        if (Array.isArray(data.categories)) {
+          setCategories(data.categories);
+          localStorage.setItem(`saas_categories_${selectedTenantId}`, JSON.stringify(data.categories));
+        }
+        if (Array.isArray(data.products)) {
+          setProducts(data.products);
+          localStorage.setItem(`saas_products_${selectedTenantId}`, JSON.stringify(data.products));
+        }
+        if (data.settings && typeof data.settings.nationalDayTheme === 'boolean') {
+          setNationalDayTheme(data.settings.nationalDayTheme);
+          localStorage.setItem(`saas_national_day_theme_${selectedTenantId}`, data.settings.nationalDayTheme ? '1' : '0');
+        }
+        setRemoteMenuReady(true);
+      } catch (error) {
+        console.error('Unable to load shared menu data:', error);
+        if (!cancelled) setRemoteSyncStatus('error');
+      }
+    };
+
+    loadRemoteMenu();
+    const refreshTimer = window.setInterval(() => {
+      if (currentView === 'digital-menu') loadRemoteMenu();
+    }, 15000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(refreshTimer);
+    };
+  }, [currentView, selectedTenantId]);
+
   // Redirect root path '/' to '/menu' for cleaner URLs
   useEffect(() => {
     if (window.location.pathname === '/' || window.location.pathname === '') {
@@ -290,6 +336,12 @@ export default function App() {
     return (saved === 'en' || saved === 'ar') ? saved : 'ar';
   });
   const [darkMode, setDarkMode] = useState<boolean>(false);
+
+  // Saudi National Day theme toggle — synced through the live menu API so the
+  // switch takes effect for real customers immediately, not just this browser.
+  const [nationalDayTheme, setNationalDayTheme] = useState<boolean>(() => {
+    return localStorage.getItem('saas_national_day_theme_t-1') === '1';
+  });
 
   useEffect(() => {
     localStorage.setItem('saas_lang', lang);
@@ -313,6 +365,16 @@ export default function App() {
     email: string;
     phone: string;
   } | null>(null);
+
+  // Tracks activeStaff without being a reactive dependency, so the debounced
+  // remote-save effects below only re-fire when the data actually changes —
+  // not merely because a manager just logged in (which previously re-saved
+  // the menu on every login and, in local dev, triggered Vite's full-page
+  // reload for public/ writes, silently kicking the manager back to login).
+  const activeStaffRef = useRef(activeStaff);
+  useEffect(() => {
+    activeStaffRef.current = activeStaff;
+  }, [activeStaff]);
 
   // Helper to load employees list dynamically by active tenant
   const getTenantEmployees = (): any[] => {
@@ -506,7 +568,7 @@ export default function App() {
   };
 
   // Handle Login Authorization
-  const handlePinSubmit = (e: React.FormEvent) => {
+  const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPinError('');
 
@@ -518,6 +580,24 @@ export default function App() {
       const isMatch = pinInput === correctPin || (targetEmp.systemRole === 'manager' && (pinInput === '0000' || pinInput === '1234')) || pinInput === '0000';
       if (isMatch) {
         const systemRole = targetEmp.systemRole || 'cashier';
+        if (systemRole === 'manager') {
+          try {
+            const response = await fetch('/api/menu-data.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': pinInput },
+              body: JSON.stringify({ action: 'login' })
+            });
+            if (!response.ok) {
+              setPinError(lang === 'ar' ? 'تعذر تسجيل الدخول إلى مزامنة المنيو.' : 'Unable to authenticate menu synchronization.');
+              return;
+            }
+            managerPinRef.current = pinInput;
+          } catch (error) {
+            console.error('Menu sync login failed:', error);
+            setPinError(lang === 'ar' ? 'خدمة مزامنة المنيو غير متاحة حاليًا.' : 'Menu synchronization is currently unavailable.');
+            return;
+          }
+        }
         const staff = {
           name: lang === 'ar' ? targetEmp.nameAr : targetEmp.nameEn,
           role: systemRole as 'cashier' | 'manager' | 'kitchen',
@@ -540,8 +620,61 @@ export default function App() {
     if (activeStaff) {
       addAuditLog('STAFF_LOGOUT', 'UserSession', activeStaff.role === 'manager' ? 'manager-1' : 'cashier-1', `Staff member ${activeStaff.name} logged out`);
     }
+    managerPinRef.current = '';
     setActiveStaff(null);
   };
+
+  // Persist manager edits to the shared live menu after a short debounce.
+  // Deliberately NOT keyed on `activeStaff` — see activeStaffRef above.
+  useEffect(() => {
+    if (!remoteMenuReady || activeStaffRef.current?.role !== 'manager' || !managerPinRef.current) return;
+
+    setRemoteSyncStatus('saving');
+    const saveTimer = window.setTimeout(async () => {
+      try {
+        const response = await fetch('/api/menu-data.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Pin': managerPinRef.current
+          },
+          body: JSON.stringify({ categories, products })
+        });
+        if (!response.ok) throw new Error(`Menu API returned ${response.status}`);
+        setRemoteSyncStatus('saved');
+      } catch (error) {
+        console.error('Unable to save shared menu data:', error);
+        setRemoteSyncStatus('error');
+      }
+    }, 700);
+
+    return () => window.clearTimeout(saveTimer);
+  }, [categories, products, remoteMenuReady]);
+
+  // Persist the National Day theme toggle live so it reflects instantly for customers.
+  // Deliberately NOT keyed on `activeStaff` — see activeStaffRef above.
+  useEffect(() => {
+    if (!remoteMenuReady || activeStaffRef.current?.role !== 'manager' || !managerPinRef.current) return;
+    localStorage.setItem(`saas_national_day_theme_${selectedTenantId}`, nationalDayTheme ? '1' : '0');
+
+    const saveTimer = window.setTimeout(async () => {
+      try {
+        const response = await fetch('/api/menu-data.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Pin': managerPinRef.current
+          },
+          body: JSON.stringify({ settings: { nationalDayTheme } })
+        });
+        if (!response.ok) throw new Error(`Menu API returned ${response.status}`);
+      } catch (error) {
+        console.error('Unable to save National Day theme setting:', error);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(saveTimer);
+  }, [nationalDayTheme, remoteMenuReady]);
 
   const syncTenantToDisk = async (tenant: Tenant) => {
     try {
@@ -616,7 +749,7 @@ export default function App() {
       {/* Conditionally wrap based on view for edge-to-edge customer digital menu */}
       {currentView === 'digital-menu' ? (
         <div className="flex-1 w-full flex flex-col">
-          <DigitalMenu 
+          <DigitalMenu
             tenant={activeTenant}
             branches={activeTenantBranches}
             products={products}
@@ -627,10 +760,25 @@ export default function App() {
             darkMode={darkMode}
             setDarkMode={setDarkMode}
             onPlaceOrder={placeOrder}
+            nationalDayTheme={nationalDayTheme}
           />
         </div>
       ) : currentView === 'admin' && activeStaff !== null && activeStaff.role === 'manager' ? (
-        <AdminDashboard 
+        <div className="relative flex-1">
+          <div className={`fixed bottom-4 left-4 z-[100] rounded-full px-4 py-2 text-xs font-bold shadow-lg ${
+            remoteSyncStatus === 'error'
+              ? 'bg-red-600 text-white'
+              : remoteSyncStatus === 'saving'
+                ? 'bg-amber-500 text-white'
+                : 'bg-emerald-600 text-white'
+          }`}>
+            {remoteSyncStatus === 'error'
+              ? (lang === 'ar' ? 'تعذر حفظ المنيو على السيرفر' : 'Live menu save failed')
+              : remoteSyncStatus === 'saving'
+                ? (lang === 'ar' ? 'جاري حفظ المنيو...' : 'Saving live menu...')
+                : (lang === 'ar' ? 'المنيو متزامن مع النسخة اللايف' : 'Live menu is synchronized')}
+          </div>
+          <AdminDashboard
           tenant={activeTenant}
           setTenants={setTenants}
           branches={activeTenantBranches}
@@ -656,7 +804,10 @@ export default function App() {
           onLogout={handleLogout}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
-        />
+          nationalDayTheme={nationalDayTheme}
+          setNationalDayTheme={setNationalDayTheme}
+          />
+        </div>
       ) : (
         <>
           {/* Main Workspace Body */}
@@ -915,6 +1066,8 @@ export default function App() {
                       onLogout={handleLogout}
                       darkMode={darkMode}
                       setDarkMode={setDarkMode}
+                      nationalDayTheme={nationalDayTheme}
+                      setNationalDayTheme={setNationalDayTheme}
                     />
                   </div>
                 )}
@@ -1016,4 +1169,3 @@ export default function App() {
     </div>
   );
 }
-

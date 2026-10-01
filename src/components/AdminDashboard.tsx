@@ -34,6 +34,8 @@ interface AdminDashboardProps {
   darkMode?: boolean;
   setDarkMode?: (dark: boolean) => void;
   setBranches?: React.Dispatch<React.SetStateAction<Branch[]>>;
+  nationalDayTheme?: boolean;
+  setNationalDayTheme?: (value: boolean) => void;
 }
 
 export default function AdminDashboard({
@@ -61,7 +63,9 @@ export default function AdminDashboard({
   onLogout,
   darkMode,
   setDarkMode,
-  setBranches
+  setBranches,
+  nationalDayTheme,
+  setNationalDayTheme
 }: AdminDashboardProps) {
   const [localLang, setLocalLang] = useState<'en' | 'ar'>(() => {
     return propLang || (localStorage.getItem('saas_lang') as 'en' | 'ar') || 'ar';
@@ -2548,6 +2552,46 @@ export default function AdminDashboard({
           </div>
 
           <div className="space-y-4">
+            {/* Saudi National Day theme toggle row */}
+            <div
+              className="flex items-center justify-between p-4 rounded-2xl border-2"
+              style={{
+                background: 'linear-gradient(135deg, #0b3b2c 0%, #0f4a34 100%)',
+                borderColor: nationalDayTheme ? '#c9a24b' : 'rgba(201,162,75,0.35)'
+              }}
+            >
+              <div className="space-y-1 text-left rtl:text-right">
+                <span className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>🇸🇦</span>
+                  {lang === 'ar' ? 'تفعيل هوية اليوم الوطني السعودي' : 'Enable Saudi National Day Theme'}
+                </span>
+                <p className="text-[10px] text-emerald-100/80 max-w-md">
+                  {lang === 'ar'
+                    ? 'يبدّل ألوان وشكل المنيو الرقمي (الموقع الظاهر للعملاء) إلى هوية اليوم الوطني — أخضر داكن وذهبي مع شعار "عزّنا بطبعنا". يعمل فوراً على الموقع الحي، وتقدر تطفيه بعد يومين بنفس الزر.'
+                    : 'Switches the customer-facing digital menu to the Saudi National Day identity — deep green and gold with the "Ozzona Bitab’na" slogan. Takes effect live immediately, and can be switched off after the two days with the same button.'}
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (setNationalDayTheme) {
+                    const next = !nationalDayTheme;
+                    setNationalDayTheme(next);
+                    addAuditLog('TOGGLE_NATIONAL_DAY_THEME', 'Tenant', tenant.id, `Toggled Saudi National Day theme to ${next ? 'ENABLED' : 'DISABLED'}`);
+                  }
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer shrink-0 ${
+                  nationalDayTheme ? 'bg-[#5aba1c]' : 'bg-white/20'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    nationalDayTheme ? (lang === 'ar' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
             {/* Delivery toggle row */}
             <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-150/45 dark:border-gray-800/40">
               <div className="space-y-1 text-left rtl:text-right">
