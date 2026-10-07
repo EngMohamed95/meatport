@@ -30,6 +30,14 @@ const highlightText = (text: string, highlight: string) => {
   );
 };
 
+// Legacy catalog images (Unsplash links and the stock photos auto-downloaded as `mp-p-<n>.jpg`)
+// don't show the restaurant's real dishes, so the menu only renders real product photos.
+const getProductPhoto = (product: Product): string | null => {
+  const url = product.imageUrl?.trim();
+  if (!url || /images\.unsplash\.com/i.test(url) || /\/assets\/products\/mp-p-\d+\.jpg$/i.test(url)) return null;
+  return url;
+};
+
 interface DigitalMenuProps {
   tenant: Tenant;
   branches: Branch[];
@@ -349,6 +357,8 @@ export default function DigitalMenu({
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
   };
+
+  const selectedProductPhoto = selectedProduct ? getProductPhoto(selectedProduct) : null;
 
   // Open item modal & load initial selections
   const handleOpenProduct = (product: Product) => {
@@ -1123,16 +1133,31 @@ export default function DigitalMenu({
             <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
               {tenantProducts.map(p => {
                 const isFav = favorites.includes(p.id);
+                const photo = getProductPhoto(p);
                 return (
-                  <div 
+                  <div
                     key={`mobile-${p.id}`}
                     onClick={() => handleOpenProduct(p)}
                     className={`group rounded-[1.25rem] overflow-hidden border cursor-pointer transition-all duration-300 hover:translate-y-[-1px] hover:shadow-md flex items-center p-2.5 sm:p-3 gap-3 ${
-                      darkMode 
-                        ? 'bg-gray-900/40 border-gray-900 hover:border-gray-800' 
+                      darkMode
+                        ? 'bg-gray-900/40 border-gray-900 hover:border-gray-800'
                         : 'bg-white border-gray-100 hover:border-rose-100'
                     }`}
                   >
+                    {/* Left: Product Image */}
+                    {photo && (
+                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                        <img
+                          src={photo}
+                          alt={lang === 'ar' ? p.nameAr : p.nameEn}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    )}
+
                     {/* Middle: Text details */}
                     <div className="flex-1 min-w-0 space-y-1 text-right">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -1213,8 +1238,9 @@ export default function DigitalMenu({
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                   {tenantProducts.map(p => {
                     const isFav = favorites.includes(p.id);
+                    const photo = getProductPhoto(p);
                     return (
-                      <div 
+                      <div
                         key={`desktop-grid-${p.id}`}
                         onClick={() => handleOpenProduct(p)}
                         className={`product-card group rounded-[2rem] overflow-hidden border cursor-pointer transition-all duration-500 hover:translate-y-[-4px] hover:shadow-2xl flex flex-col justify-between ${
@@ -1223,7 +1249,30 @@ export default function DigitalMenu({
                             : 'bg-white border-gray-100 hover:border-rose-200 hover:shadow-rose-100/70'
                         }`}
                       >
-                        {/* Card Header (without image) */}
+                        {/* Product Cover image (brand logo placeholder keeps grid cards even) */}
+                        <div className={`relative aspect-square overflow-hidden ${darkMode ? 'bg-gray-800/60' : 'bg-gray-50'}`}>
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt={lang === 'ar' ? p.nameAr : p.nameEn}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <img
+                                src={tenant.logoUrl || '/logo.png'}
+                                alt=""
+                                className="w-24 h-auto object-contain opacity-20 grayscale"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card Header */}
                         <div className="p-5 pb-0 flex items-center justify-between">
                           {p.discountRate > 0 ? (
                             <span className="bg-green-600 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
@@ -1296,16 +1345,31 @@ export default function DigitalMenu({
                 <div className="flex flex-col gap-4">
                   {tenantProducts.map(p => {
                     const isFav = favorites.includes(p.id);
+                    const photo = getProductPhoto(p);
                     return (
-                      <div 
+                      <div
                         key={`desktop-list-${p.id}`}
                         onClick={() => handleOpenProduct(p)}
                         className={`group rounded-2xl overflow-hidden border cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-sm flex items-center p-3 sm:p-4 gap-4 ${
-                          darkMode 
-                            ? 'bg-gray-900/40 border-gray-900 hover:border-gray-800' 
+                          darkMode
+                            ? 'bg-gray-900/40 border-gray-900 hover:border-gray-800'
                             : 'bg-white border-gray-100 hover:border-rose-100'
                         }`}
                       >
+                        {/* Left: Product Image */}
+                        {photo && (
+                          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                            <img
+                              src={photo}
+                              alt={lang === 'ar' ? p.nameAr : p.nameEn}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        )}
+
                         {/* Middle: Text details */}
                         <div className="flex-1 min-w-0 space-y-1 text-right">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -1573,6 +1637,18 @@ export default function DigitalMenu({
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Product Photo */}
+            {selectedProductPhoto && (
+              <div className="px-6 pt-4 flex-shrink-0">
+                <img
+                  src={selectedProductPhoto}
+                  alt={lang === 'ar' ? selectedProduct.nameAr : selectedProduct.nameEn}
+                  className="w-full max-w-sm mx-auto aspect-square object-cover rounded-2xl"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            )}
 
             {/* Selection Body */}
             <div className="p-6 space-y-6 flex-1 overflow-y-auto text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
