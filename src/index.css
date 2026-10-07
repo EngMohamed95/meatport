@@ -67,23 +67,6 @@
   color: #f9fafb !important;
 }
 
-.product-add-button {
-  background: rgba(225, 29, 72, 0.08) !important;
-  color: #e11d48 !important;
-}
-
-.product-card:hover .product-add-button,
-.group:hover .product-add-button,
-.product-add-button:hover {
-  background: var(--tenant-primary, #e11d48) !important;
-  color: #ffffff !important;
-}
-
-.product-add-button svg {
-  color: currentColor !important;
-  stroke: currentColor !important;
-}
-
 @keyframes category-rise {
   from {
     opacity: 0;

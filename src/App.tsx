@@ -759,7 +759,6 @@ export default function App() {
             setLang={setLang}
             darkMode={darkMode}
             setDarkMode={setDarkMode}
-            onPlaceOrder={placeOrder}
             nationalDayTheme={nationalDayTheme}
           />
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  Search, Flame, Clock, Plus, Minus, Share2, Heart, Info, AlertCircle, 
-  ChevronRight, ShoppingBag, X, Check, Star, Moon, Sun, Languages,
+  Search, Flame, Clock, Share2, Heart, Info, AlertCircle,
+  ChevronRight, X, Star, Moon, Sun, Languages,
   Phone, MapPin, MessageCircle, Facebook, Instagram, Menu, LayoutGrid, List, Mail, Globe
 } from 'lucide-react';
 import { Product, Category, ModifierGroup, Tenant, Branch } from '../types';
@@ -49,36 +49,6 @@ interface DigitalMenuProps {
   darkMode: boolean;
   setDarkMode: (d: boolean) => void;
   nationalDayTheme?: boolean;
-  onPlaceOrder: (
-    orderMetadata: {
-      receiptNumber: string;
-      customerName?: string;
-      customerType: 'dine_in' | 'takeaway' | 'delivery';
-      paymentMethod: 'cash' | 'card' | 'apple_pay' | 'online';
-      subtotal: number;
-      discountAmount: number;
-      taxAmount: number;
-      total: number;
-      source: 'DigitalMenu' | 'POS';
-      tableNumber?: string;
-      customerPhone?: string;
-      deliveryAddress?: string;
-    },
-    items: {
-      productId: string;
-      productNameEn: string;
-      productNameAr: string;
-      sizeNameEn?: string;
-      sizeNameAr?: string;
-      pricePerItem: number;
-      quantity: number;
-      modifiers: {
-        nameEn: string;
-        nameAr: string;
-        price: number;
-      }[];
-    }[]
-  ) => void;
 }
 
 export default function DigitalMenu({
@@ -91,8 +61,7 @@ export default function DigitalMenu({
   setLang,
   darkMode,
   setDarkMode,
-  nationalDayTheme = false,
-  onPlaceOrder
+  nationalDayTheme = false
 }: DigitalMenuProps) {
   // Saudi National Day brand identity colors (from GEA guideline: deep green base,
   // "Authenticity" green #5aba1c and "Vision" gold #7c5d21 accents).
@@ -210,40 +179,9 @@ export default function DigitalMenu({
   const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
-  // Dialog selection
+  // Product details dialog (view-only menu: no ordering)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
-  // Custom states inside dialog
-  const [selectedSizeId, setSelectedSizeId] = useState<string>('');
-  const [selectedModifiers, setSelectedModifiers] = useState<Record<string, string[]>>({}); // mgId -> modifierIds
-  const [quantity, setQuantity] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
-
-  // Order checkout details states
-  const [orderType, setOrderType] = useState<'dine_in' | 'takeaway' | 'delivery'>('dine_in');
-  const [tableNumber, setTableNumber] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
-  // Redirect orderType if delivery is disabled
-  useEffect(() => {
-    if (tenant.enableDelivery === false && orderType === 'delivery') {
-      setOrderType('dine_in');
-    }
-  }, [tenant.enableDelivery, orderType]);
-
-  // Simple cart state
-  const [cart, setCart] = useState<{
-    id: string;
-    product: Product;
-    sizeName?: string;
-    modifiersList: { nameEn: string; nameAr: string; price: number }[];
-    pricePerItem: number;
-    quantity: number;
-  }[]>([]);
-  const [showCartDrawer, setShowCartDrawer] = useState(false);
 
   // Toggle favorite
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
@@ -360,142 +298,10 @@ export default function DigitalMenu({
 
   const selectedProductPhoto = selectedProduct ? getProductPhoto(selectedProduct) : null;
 
-  // Open item modal & load initial selections
+  // Open item details (view-only menu)
   const handleOpenProduct = (product: Product) => {
     setSelectedProduct(product);
-    setSelectedSizeId(product.sizes[0]?.id || '');
-    setSelectedModifiers({});
-    setQuantity(1);
   };
-
-  // Handle Modifier Selections
-  const handleSelectModifier = (mgId: string, modifierId: string, isRequired: boolean, maxSelect: number) => {
-    setSelectedModifiers(prev => {
-      const currentSelection = prev[mgId] || [];
-      if (maxSelect === 1) {
-        // Radio behavior
-        return { ...prev, [mgId]: [modifierId] };
-      } else {
-        // Checkbox behavior with bounds limit
-        if (currentSelection.includes(modifierId)) {
-          return { ...prev, [mgId]: currentSelection.filter(id => id !== modifierId) };
-        } else {
-          if (currentSelection.length < maxSelect) {
-            return { ...prev, [mgId]: [...currentSelection, modifierId] };
-          }
-          return prev;
-        }
-      }
-    });
-  };
-
-  // Calculate dynamic pricing inside dialog
-  const calculatedDialogPrice = useMemo(() => {
-    if (!selectedProduct) return 0;
-    let price = selectedProduct.price;
-
-    // Size adjustment
-    const activeSize = selectedProduct.sizes.find(s => s.id === selectedSizeId);
-    if (activeSize) {
-      price += activeSize.priceDifference;
-    }
-
-    // Modifiers adjustment
-    Object.keys(selectedModifiers).forEach(mgId => {
-      const modIds = selectedModifiers[mgId] || [];
-      const group = modifierGroups.find(mg => mg.id === mgId);
-      if (group) {
-        modIds.forEach(mId => {
-          const mod = group.modifiers.find(m => m.id === mId);
-          if (mod) price += mod.price;
-        });
-      }
-    });
-
-    // Discount promo rate
-    if (selectedProduct.discountRate > 0) {
-      price = price * (1 - selectedProduct.discountRate);
-    }
-
-    return price * quantity;
-  }, [selectedProduct, selectedSizeId, selectedModifiers, quantity, modifierGroups]);
-
-  // Add Item to cart
-  const handleAddToCart = () => {
-    if (!selectedProduct) return;
-
-    // Validate required modifier groups
-    const missingGroupIds: string[] = [];
-    selectedProduct.modifierGroupIds.forEach(mgId => {
-      const group = modifierGroups.find(mg => mg.id === mgId);
-      if (group && group.isRequired) {
-        const selection = selectedModifiers[mgId] || [];
-        if (selection.length < group.minSelect) {
-          missingGroupIds.push(mgId);
-        }
-      }
-    });
-
-    if (missingGroupIds.length > 0) {
-      const firstMissing = modifierGroups.find(mg => mg.id === missingGroupIds[0]);
-      alert(lang === 'ar' 
-        ? `يرجى اختيار ميزة مطلوبة لـ: ${firstMissing?.nameAr}` 
-        : `Please complete required choices for: ${firstMissing?.nameEn}`);
-      return;
-    }
-
-    const sizeOpt = selectedProduct.sizes.find(s => s.id === selectedSizeId);
-    const selectedModsFlat: { nameEn: string; nameAr: string; price: number }[] = [];
-
-    Object.keys(selectedModifiers).forEach(mgId => {
-      const modIds = selectedModifiers[mgId] || [];
-      const group = modifierGroups.find(mg => mg.id === mgId);
-      if (group) {
-        modIds.forEach(mId => {
-          const mod = group.modifiers.find(m => m.id === mId);
-          if (mod) {
-            selectedModsFlat.push({
-              nameEn: mod.nameEn,
-              nameAr: mod.nameAr,
-              price: mod.price
-            });
-          }
-        });
-      }
-    });
-
-    const itemPrice = calculatedDialogPrice / quantity;
-
-    setCart(prev => [
-      ...prev,
-      {
-        id: `cart-item-${Date.now()}`,
-        product: selectedProduct,
-        sizeName: sizeOpt ? (lang === 'ar' ? sizeOpt.nameAr : sizeOpt.nameEn) : undefined,
-        modifiersList: selectedModsFlat,
-        pricePerItem: itemPrice,
-        quantity
-      }
-    ]);
-
-    setSelectedProduct(null);
-    if (window.innerWidth >= 768) {
-      setShowCartDrawer(true);
-    }
-  };
-
-  // Cart calculations
-  const cartSubtotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + (item.pricePerItem * item.quantity), 0);
-  }, [cart]);
-
-  const taxAmount = useMemo(() => {
-    // 15% VAT for Meatport, 5% for Pizza Al-Forno
-    const rate = tenant.id === 't-1' ? 0.15 : 0.05;
-    return cartSubtotal * rate;
-  }, [cartSubtotal, tenant]);
-
-  const cartTotal = cartSubtotal + taxAmount;
 
   return (
     <div
@@ -651,19 +457,6 @@ export default function DigitalMenu({
               }`}
             >
               {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-            </button>
-
-            {/* Shopping Cart Drawer Trigger */}
-            <button 
-              onClick={() => setShowCartDrawer(true)}
-              className="relative p-2.5 rounded-lg bg-[var(--tenant-primary)] hover:opacity-95 text-white transition shadow-sm flex items-center justify-center"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-red-600 text-[8px] font-bold text-white flex items-center justify-center animate-bounce shadow-xs">
-                  {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                </span>
-              )}
             </button>
 
             {/* Hamburger Mobile Menu Toggle */}
@@ -1195,11 +988,11 @@ export default function DigitalMenu({
                       </div>
                     </div>
 
-                    {/* Right: Price & Add Button */}
+                    {/* Right: Favorite & Price */}
                     <div className="flex flex-col items-end justify-between self-stretch shrink-0 min-h-full">
                       {/* Share / Favorite */}
                       <div className="flex gap-1">
-                        <button 
+                        <button
                           onClick={(e) => toggleFavorite(p.id, e)}
                           className={`p-1.5 rounded-full transition ${
                             isFav ? 'text-rose-600' : 'text-gray-300 hover:text-gray-555'
@@ -1209,7 +1002,7 @@ export default function DigitalMenu({
                         </button>
                       </div>
 
-                      {/* Price & Plus Button */}
+                      {/* Price */}
                       <div className="flex items-center gap-2 mt-auto">
                         <div className="text-right">
                           {p.discountRate > 0 && (
@@ -1221,10 +1014,6 @@ export default function DigitalMenu({
                             {(p.price * (1 - p.discountRate)).toFixed(2)} <span className="text-[8px] font-bold"><SaudiRiyalIcon /></span>
                           </span>
                         </div>
-                        
-                        <span className="product-add-button p-2 rounded-xl transition shadow-xs">
-                          <Plus className="w-3.5 h-3.5" />
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -1311,7 +1100,7 @@ export default function DigitalMenu({
                             </p>
                           </div>
 
-                          {/* Attributes & Cart triggering */}
+                          {/* Price & Attributes */}
                           <div className="border-t border-gray-100/10 pt-4 flex items-center justify-between gap-3">
                             <div>
                               {p.discountRate > 0 && (
@@ -1324,17 +1113,12 @@ export default function DigitalMenu({
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold">
-                              {p.calories && (
-                                <span className="hidden sm:flex items-center gap-0.5">
-                                  <Flame className="w-3 h-3 text-amber-500" />
-                                  {p.calories} Cal
-                                </span>
-                              )}
-                              <span className="product-add-button flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-110">
-                                <Plus className="w-5 h-5" />
+                            {p.calories && (
+                              <span className="hidden sm:flex items-center gap-0.5 text-[10px] text-gray-400 font-bold">
+                                <Flame className="w-3 h-3 text-amber-500" />
+                                {p.calories} Cal
                               </span>
-                            </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1402,11 +1186,11 @@ export default function DigitalMenu({
                           </div>
                         </div>
 
-                        {/* Right: Price & Add Button */}
+                        {/* Right: Favorite & Price */}
                         <div className="flex flex-col items-end justify-between self-stretch shrink-0 min-h-full">
                           {/* Share / Favorite */}
                           <div className="flex gap-1">
-                            <button 
+                            <button
                               onClick={(e) => toggleFavorite(p.id, e)}
                               className={`p-1.5 rounded-full transition ${
                                 isFav ? 'text-rose-600' : 'text-gray-300 hover:text-gray-500'
@@ -1416,7 +1200,7 @@ export default function DigitalMenu({
                             </button>
                           </div>
 
-                          {/* Price & Plus Button */}
+                          {/* Price */}
                           <div className="flex items-center gap-2 mt-auto">
                             <div className="text-right">
                               {p.discountRate > 0 && (
@@ -1428,10 +1212,6 @@ export default function DigitalMenu({
                                 {(p.price * (1 - p.discountRate)).toFixed(2)} <span className="text-[8px] font-bold"><SaudiRiyalIcon /></span>
                               </span>
                             </div>
-                            
-                            <span className="product-add-button p-2 rounded-xl transition shadow-xs">
-                              <Plus className="w-3.5 h-3.5" />
-                            </span>
                           </div>
                         </div>
                       </div>
@@ -1671,90 +1451,53 @@ export default function DigitalMenu({
                 </div>
               )}
 
-              {/* Sizes Selection */}
+              {/* Available Sizes (info only) */}
               {selectedProduct.sizes.length > 0 && (
                 <div className="space-y-2.5">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-gray-400">{lang === 'ar' ? 'اختر الحجم' : 'Select Size Option'}</h4>
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-gray-400">{lang === 'ar' ? 'الأحجام المتوفرة' : 'Available Sizes'}</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    {selectedProduct.sizes.map(size => {
-                      const isSelected = size.id === selectedSizeId;
-                      return (
-                        <div
-                          key={size.id}
-                          onClick={() => setSelectedSizeId(size.id)}
-                          className={`p-3.5 rounded-xl border-2 cursor-pointer transition text-center flex flex-col justify-center ${
-                            isSelected 
-                              ? 'border-rose-600 bg-rose-50/10' 
-                              : darkMode ? 'border-gray-800 hover:border-gray-700 bg-gray-900/20' : 'border-gray-100 hover:border-gray-200 bg-white'
-                          }`}
-                        >
-                          <span className="font-bold text-xs">{lang === 'ar' ? size.nameAr : size.nameEn}</span>
-                          <span className="text-[10px] text-gray-400 mt-1">
-                            {size.priceDifference === 0 
-                              ? (lang === 'ar' ? 'السعر الأساسي' : 'Base Price') 
-                              : `+${size.priceDifference.toFixed(2)} $<SaudiRiyalIcon />`}
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {selectedProduct.sizes.map(size => (
+                      <div
+                        key={size.id}
+                        className={`p-3.5 rounded-xl border-2 text-center flex flex-col justify-center ${
+                          darkMode ? 'border-gray-800 bg-gray-900/20' : 'border-gray-100 bg-white'
+                        }`}
+                      >
+                        <span className="font-bold text-xs">{lang === 'ar' ? size.nameAr : size.nameEn}</span>
+                        <span className="text-[10px] font-bold text-rose-600 mt-1">
+                          {((selectedProduct.price + size.priceDifference) * (1 - selectedProduct.discountRate)).toFixed(2)} <SaudiRiyalIcon />
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* Modifier groups */}
+              {/* Available Add-ons (info only) */}
               {selectedProduct.modifierGroupIds.map(mgId => {
                 const group = modifierGroups.find(mg => mg.id === mgId);
                 if (!group) return null;
 
-                const selectedList = selectedModifiers[mgId] || [];
-
                 return (
                   <div key={group.id} className="space-y-2.5 border-t border-gray-100/10 pt-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-xs uppercase tracking-wider text-gray-400">
-                          {lang === 'ar' ? group.nameAr : group.nameEn}
-                        </h4>
-                        <span className="text-[9px] text-gray-400 font-medium">
-                          {lang === 'ar' 
-                            ? `اختر من ${group.minSelect} إلى ${group.maxSelect}` 
-                            : `Select ${group.minSelect} to ${group.maxSelect} options`}
-                        </span>
-                      </div>
-                      {group.isRequired && (
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-950/40 dark:text-rose-400">
-                          {lang === 'ar' ? 'إجباري' : 'Required'}
-                        </span>
-                      )}
-                    </div>
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-gray-400">
+                      {lang === 'ar' ? group.nameAr : group.nameEn}
+                    </h4>
 
                     <div className="space-y-2">
-                      {group.modifiers.map(mod => {
-                        const isSelected = selectedList.includes(mod.id);
-                        return (
-                          <div
-                            key={mod.id}
-                            onClick={() => handleSelectModifier(group.id, mod.id, group.isRequired, group.maxSelect)}
-                            className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
-                              isSelected 
-                                ? 'border-rose-600 bg-rose-50/5 dark:bg-rose-950/10' 
-                                : darkMode ? 'border-gray-800 hover:border-gray-700 bg-gray-900/10' : 'border-gray-100 hover:border-gray-200 bg-white'
-                            }`}
-                          >
-                            <span className="font-semibold text-xs">{lang === 'ar' ? mod.nameAr : mod.nameEn}</span>
-                            <div className="flex items-center gap-2">
-                              {mod.price > 0 && (
-                                <span className="text-[10px] font-bold text-rose-600">+{mod.price.toFixed(2)} <SaudiRiyalIcon /></span>
-                              )}
-                              <div className={`w-4 h-4 rounded flex items-center justify-center border ${
-                                isSelected ? 'bg-rose-600 border-rose-600 text-white' : 'border-gray-300'
-                              }`}>
-                                {isSelected && <Check className="w-3 h-3" />}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {group.modifiers.map(mod => (
+                        <div
+                          key={mod.id}
+                          className={`p-3 rounded-xl border flex items-center justify-between ${
+                            darkMode ? 'border-gray-800 bg-gray-900/10' : 'border-gray-100 bg-white'
+                          }`}
+                        >
+                          <span className="font-semibold text-xs">{lang === 'ar' ? mod.nameAr : mod.nameEn}</span>
+                          {mod.price > 0 && (
+                            <span className="text-[10px] font-bold text-rose-600">+{mod.price.toFixed(2)} <SaudiRiyalIcon /></span>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
@@ -1785,410 +1528,30 @@ export default function DigitalMenu({
               )}
             </div>
 
-            {/* Bottom Actions Row */}
+            {/* Bottom Price Row */}
             <div className={`p-6 border-t flex items-center justify-between gap-4 flex-shrink-0 ${
               darkMode ? 'border-gray-900 bg-gray-950' : 'border-gray-100 bg-gray-50/50'
-            }`}>
-              
-              {/* Quantity Changer */}
-              <div className="flex items-center gap-3 bg-white border border-gray-200/50 rounded-full px-3 py-1.5 shadow-sm dark:bg-gray-900 dark:border-gray-800">
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-1 rounded-full text-gray-400 hover:text-gray-800 dark:hover:text-white"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <span className="font-bold text-sm w-4 text-center">{quantity}</span>
-                <button 
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="p-1 rounded-full text-gray-400 hover:text-gray-800 dark:hover:text-white"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
+            }`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+              <div>
+                {selectedProduct.discountRate > 0 && (
+                  <span className="text-[10px] line-through text-gray-400 block">
+                    {selectedProduct.price.toFixed(2)} <SaudiRiyalIcon />
+                  </span>
+                )}
+                <span className="text-lg font-black text-rose-600">
+                  {(selectedProduct.price * (1 - selectedProduct.discountRate)).toFixed(2)} <SaudiRiyalIcon />
+                </span>
               </div>
 
-              {/* Add Button */}
               <button
-                onClick={handleAddToCart}
-                className="flex-1 py-2.5 bg-rose-600 text-white font-bold text-xs rounded-full hover:bg-rose-700 transition shadow-sm flex items-center justify-center gap-2"
+                onClick={() => setSelectedProduct(null)}
+                className="px-6 py-2.5 bg-rose-600 text-white font-bold text-xs rounded-full hover:bg-rose-700 transition shadow-sm"
               >
-                <ShoppingBag className="w-4 h-4" />
-                {lang === 'ar' ? 'إضافة للطلب' : 'Add to Order'}
-                <span>•</span>
-                <span>{calculatedDialogPrice.toFixed(2)} <SaudiRiyalIcon /></span>
+                {lang === 'ar' ? 'إغلاق' : 'Close'}
               </button>
             </div>
 
           </div>
-        </div>
-      )}
-
-      {/* Cart Drawer */}
-      {showCartDrawer && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-stretch justify-end bg-black/60 backdrop-blur-xs font-sans p-0">
-          <div className={`w-full max-w-md h-[90vh] md:h-full rounded-t-[32px] md:rounded-none shadow-2xl flex flex-col justify-between ${
-            darkMode ? 'bg-gray-950 text-gray-100 md:border-l border-gray-900' : 'bg-white text-gray-800'
-          }`}>
-            <div className="flex items-center justify-between border-b border-gray-100/15 p-5 bg-gray-50/50 dark:bg-gray-900">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-rose-600" />
-                {lang === 'ar' ? 'طلبك الحالي' : 'Your Digital Order'}
-              </h3>
-              <button 
-                onClick={() => setShowCartDrawer(false)}
-                className="p-1.5 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Cart Items List */}
-            <div className="p-6 flex-1 overflow-y-auto space-y-4 text-left rtl:text-right" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-              {cart.length === 0 ? (
-                <div className="h-64 flex flex-col items-center justify-center text-center text-gray-400 space-y-2">
-                  <ShoppingBag className="w-10 h-10 stroke-1" />
-                  <p className="text-xs font-medium">{lang === 'ar' ? 'سلة تسوقك فارغة حالياً.' : 'Your checkout bag is empty.'}</p>
-                </div>
-              ) : (
-                cart.map(item => (
-                  <div key={item.id} className="p-3 bg-gray-50 border border-gray-100 rounded-2xl flex gap-3 dark:bg-gray-900/30 dark:border-gray-800">
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-bold text-xs text-gray-900 dark:text-white">{lang === 'ar' ? item.product.nameAr : item.product.nameEn}</h4>
-                        <span className="font-bold text-rose-600 text-xs">{(item.pricePerItem * item.quantity).toFixed(2)} <SaudiRiyalIcon /></span>
-                      </div>
-                      
-                      {item.sizeName && (
-                        <div className="text-[10px] text-gray-400">
-                          {lang === 'ar' ? 'الحجم: ' : 'Size: '} <span className="font-semibold">{item.sizeName}</span>
-                        </div>
-                      )}
-
-                      {item.modifiersList.length > 0 && (
-                        <div className="text-[10px] text-gray-400 flex flex-wrap gap-1">
-                          {lang === 'ar' ? 'الإضافات: ' : 'Add-ons: '}
-                          {item.modifiersList.map((m, idx) => (
-                            <span key={idx} className="bg-gray-100 px-1.5 py-0.5 rounded text-[9px] dark:bg-gray-800">
-                              {lang === 'ar' ? m.nameAr : m.nameEn}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between pt-1.5">
-                        <span className="text-[10px] text-gray-400">{lang === 'ar' ? `الكمية: ${item.quantity}` : `Qty: ${item.quantity}`}</span>
-                        <button 
-                          onClick={() => setCart(prev => prev.filter(c => c.id !== item.id))}
-                          className="text-[10px] text-red-500 hover:text-red-700 font-bold"
-                        >
-                          {lang === 'ar' ? 'حذف' : 'Remove'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Calculations & Order Trigger */}
-            {cart.length > 0 && (
-              <div className={`p-6 border-t space-y-4 ${
-                darkMode ? 'border-gray-900 bg-gray-950' : 'border-gray-100 bg-gray-50/50'
-              }`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                {/* Order Details Form */}
-                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-150/40 dark:border-gray-800 space-y-3.5">
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block text-right">
-                      {lang === 'ar' ? 'نوع الطلب' : 'Order Type'}
-                    </span>
-                    <div className={`grid gap-2 bg-gray-100 p-1 rounded-xl dark:bg-gray-900/80 border dark:border-gray-800 ${
-                      tenant.enableDelivery !== false ? 'grid-cols-3' : 'grid-cols-2'
-                    }`}>
-                      <button
-                        onClick={() => { setOrderType('dine_in'); setFormErrors({}); }}
-                        className={`py-1.5 rounded-lg text-[10px] font-black transition flex items-center justify-center gap-1 cursor-pointer ${
-                          orderType === 'dine_in'
-                            ? 'bg-rose-600 text-white shadow-xs'
-                            : 'text-gray-500 hover:text-gray-850 dark:text-gray-400 dark:hover:text-white'
-                        }`}
-                      >
-                        <span>🍽️</span>
-                        <span>{lang === 'ar' ? 'محلي' : 'Dine-in'}</span>
-                      </button>
-                      <button
-                        onClick={() => { setOrderType('takeaway'); setFormErrors({}); }}
-                        className={`py-1.5 rounded-lg text-[10px] font-black transition flex items-center justify-center gap-1 cursor-pointer ${
-                          orderType === 'takeaway'
-                            ? 'bg-rose-600 text-white shadow-xs'
-                            : 'text-gray-500 hover:text-gray-850 dark:text-gray-400 dark:hover:text-white'
-                        }`}
-                      >
-                        <span>🛍️</span>
-                        <span>{lang === 'ar' ? 'سفري' : 'Takeaway'}</span>
-                      </button>
-                      {tenant.enableDelivery !== false && (
-                        <button
-                          onClick={() => { setOrderType('delivery'); setFormErrors({}); }}
-                          className={`py-1.5 rounded-lg text-[10px] font-black transition flex items-center justify-center gap-1 cursor-pointer ${
-                            orderType === 'delivery'
-                              ? 'bg-rose-600 text-white shadow-xs'
-                              : 'text-gray-500 hover:text-gray-850 dark:text-gray-400 dark:hover:text-white'
-                          }`}
-                        >
-                          <span>🚗</span>
-                          <span>{lang === 'ar' ? 'توصيل' : 'Delivery'}</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3.5 border-t border-gray-100/10 pt-3.5">
-                    {orderType === 'dine_in' && (
-                      <div className="space-y-1.5 text-right">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                          {lang === 'ar' ? 'رقم الطاولة *' : 'Table Number *'}
-                        </label>
-                        <input
-                          type="text"
-                          placeholder={lang === 'ar' ? 'أدخل رقم الطاولة (مثال: 5)' : 'e.g. 5'}
-                          value={tableNumber}
-                          onChange={(e) => { setTableNumber(e.target.value); if (e.target.value) setFormErrors(prev => ({ ...prev, tableNumber: '' })); }}
-                          className={`w-full py-2 px-3 text-xs bg-white dark:bg-gray-950 border rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 dark:text-white ${
-                            formErrors.tableNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-250 dark:border-gray-800'
-                          }`}
-                        />
-                        {formErrors.tableNumber && (
-                          <span className="text-[9px] text-red-500 font-bold block mt-0.5">{formErrors.tableNumber}</span>
-                        )}
-                      </div>
-                    )}
-
-                    {orderType === 'takeaway' && (
-                      <div className="space-y-3">
-                        <div className="space-y-1.5 text-right">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                            {lang === 'ar' ? 'الاسم بالكامل *' : 'Customer Name *'}
-                          </label>
-                          <input
-                            type="text"
-                            placeholder={lang === 'ar' ? 'الاسم بالكامل' : 'Full Name'}
-                            value={customerName}
-                            onChange={(e) => { setCustomerName(e.target.value); if (e.target.value) setFormErrors(prev => ({ ...prev, customerName: '' })); }}
-                            className={`w-full py-2 px-3 text-xs bg-white dark:bg-gray-950 border rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 dark:text-white ${
-                              formErrors.customerName ? 'border-red-500 focus:ring-red-500' : 'border-gray-250 dark:border-gray-800'
-                            }`}
-                          />
-                          {formErrors.customerName && (
-                            <span className="text-[9px] text-red-500 font-bold block mt-0.5">{formErrors.customerName}</span>
-                          )}
-                        </div>
-
-                        <div className="space-y-1.5 text-right">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                            {lang === 'ar' ? 'رقم الهاتف *' : 'Phone Number *'}
-                          </label>
-                          <input
-                            type="tel"
-                            placeholder={lang === 'ar' ? 'مثال: 0500000000' : 'e.g. 0500000000'}
-                            value={customerPhone}
-                            onChange={(e) => { setCustomerPhone(e.target.value); if (e.target.value) setFormErrors(prev => ({ ...prev, customerPhone: '' })); }}
-                            className={`w-full py-2 px-3 text-xs bg-white dark:bg-gray-950 border rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 dark:text-white ${
-                              formErrors.customerPhone ? 'border-red-500 focus:ring-red-500' : 'border-gray-250 dark:border-gray-800'
-                            }`}
-                          />
-                          {formErrors.customerPhone && (
-                            <span className="text-[9px] text-red-500 font-bold block mt-0.5">{formErrors.customerPhone}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {orderType === 'delivery' && (
-                      <div className="space-y-3">
-                        <div className="space-y-1.5 text-right">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                            {lang === 'ar' ? 'الاسم بالكامل *' : 'Customer Name *'}
-                          </label>
-                          <input
-                            type="text"
-                            placeholder={lang === 'ar' ? 'الاسم بالكامل' : 'Full Name'}
-                            value={customerName}
-                            onChange={(e) => { setCustomerName(e.target.value); if (e.target.value) setFormErrors(prev => ({ ...prev, customerName: '' })); }}
-                            className={`w-full py-2 px-3 text-xs bg-white dark:bg-gray-950 border rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 dark:text-white ${
-                              formErrors.customerName ? 'border-red-500 focus:ring-red-500' : 'border-gray-250 dark:border-gray-800'
-                            }`}
-                          />
-                          {formErrors.customerName && (
-                            <span className="text-[9px] text-red-500 font-bold block mt-0.5">{formErrors.customerName}</span>
-                          )}
-                        </div>
-
-                        <div className="space-y-1.5 text-right">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                            {lang === 'ar' ? 'رقم الهاتف *' : 'Phone Number *'}
-                          </label>
-                          <input
-                            type="tel"
-                            placeholder={lang === 'ar' ? 'مثال: 0500000000' : 'e.g. 0500000000'}
-                            value={customerPhone}
-                            onChange={(e) => { setCustomerPhone(e.target.value); if (e.target.value) setFormErrors(prev => ({ ...prev, customerPhone: '' })); }}
-                            className={`w-full py-2 px-3 text-xs bg-white dark:bg-gray-950 border rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 dark:text-white ${
-                              formErrors.customerPhone ? 'border-red-500 focus:ring-red-500' : 'border-gray-250 dark:border-gray-800'
-                            }`}
-                          />
-                          {formErrors.customerPhone && (
-                            <span className="text-[9px] text-red-500 font-bold block mt-0.5">{formErrors.customerPhone}</span>
-                          )}
-                        </div>
-
-                        <div className="space-y-1.5 text-right">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                            {lang === 'ar' ? 'عنوان التوصيل بالتفصيل *' : 'Detailed Delivery Address *'}
-                          </label>
-                          <textarea
-                            rows={2}
-                            placeholder={lang === 'ar' ? 'الحي، الشارع، رقم المنزل، تفاصيل المعلم...' : 'District, street name, building no...'}
-                            value={deliveryAddress}
-                            onChange={(e) => { setDeliveryAddress(e.target.value); if (e.target.value) setFormErrors(prev => ({ ...prev, deliveryAddress: '' })); }}
-                            className={`w-full py-2 px-3 text-xs bg-white dark:bg-gray-950 border rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 dark:text-white resize-none ${
-                              formErrors.deliveryAddress ? 'border-red-500 focus:ring-red-500' : 'border-gray-250 dark:border-gray-800'
-                            }`}
-                          />
-                          {formErrors.deliveryAddress && (
-                            <span className="text-[9px] text-red-500 font-bold block mt-0.5">{formErrors.deliveryAddress}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="space-y-1.5 text-xs text-right">
-                  <div className="flex items-center justify-between text-gray-400">
-                    <span>{lang === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                    <span>{cartSubtotal.toFixed(2)} <SaudiRiyalIcon /></span>
-                  </div>
-                  <div className="flex items-center justify-between text-gray-400">
-                    <span>{lang === 'ar' ? `ضريبة القيمة المضافة (${tenant.id === 't-1' ? '١٥٪' : '٥٪'})` : `Tax / VAT (${tenant.id === 't-1' ? '15%' : '5%'})`}</span>
-                    <span>{taxAmount.toFixed(2)} <SaudiRiyalIcon /></span>
-                  </div>
-                  <div className="border-t border-gray-200/50 my-2" />
-                  <div className="flex items-center justify-between font-black text-sm text-gray-900 dark:text-white">
-                    <span>{lang === 'ar' ? 'المجموع النهائي' : 'Order Total'}</span>
-                    <span className="text-rose-600">{cartTotal.toFixed(2)} <SaudiRiyalIcon /></span>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => {
-                    const errors: Record<string, string> = {};
-                    if (orderType === 'dine_in') {
-                      if (!tableNumber.trim()) {
-                        errors.tableNumber = lang === 'ar' ? 'يرجى إدخال رقم الطاولة' : 'Please enter your table number';
-                      }
-                    } else if (orderType === 'takeaway') {
-                      if (!customerName.trim()) {
-                        errors.customerName = lang === 'ar' ? 'يرجى إدخال الاسم بالكامل' : 'Please enter your full name';
-                      }
-                      if (!customerPhone.trim()) {
-                        errors.customerPhone = lang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter your phone number';
-                      }
-                    } else if (orderType === 'delivery') {
-                      if (!customerName.trim()) {
-                        errors.customerName = lang === 'ar' ? 'يرجى إدخال الاسم بالكامل' : 'Please enter your full name';
-                      }
-                      if (!customerPhone.trim()) {
-                        errors.customerPhone = lang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter your phone number';
-                      }
-                      if (!deliveryAddress.trim()) {
-                        errors.deliveryAddress = lang === 'ar' ? 'يرجى إدخال عنوان التوصيل بالتفصيل' : 'Please enter delivery address';
-                      }
-                    }
-
-                    if (Object.keys(errors).length > 0) {
-                      setFormErrors(errors);
-                      return;
-                    }
-
-                    const receiptNum = `REC-MENU-${Date.now().toString().slice(-6)}`;
-                    
-                    const items = cart.map(item => ({
-                      productId: item.product.id,
-                      productNameEn: item.product.nameEn,
-                      productNameAr: item.product.nameAr,
-                      sizeNameEn: item.sizeName,
-                      sizeNameAr: item.sizeName,
-                      pricePerItem: item.pricePerItem,
-                      quantity: item.quantity,
-                      modifiers: item.modifiersList.map(mod => ({
-                        nameEn: mod.nameEn,
-                        nameAr: mod.nameAr,
-                        price: mod.price
-                      }))
-                    }));
-
-                    const finalCustomerName = orderType === 'dine_in'
-                      ? (lang === 'ar' ? `طاولة ${tableNumber}` : `Table ${tableNumber}`)
-                      : customerName;
-
-                    onPlaceOrder({
-                      receiptNumber: receiptNum,
-                      customerName: finalCustomerName,
-                      customerType: orderType,
-                      paymentMethod: 'online',
-                      subtotal: cartSubtotal,
-                      discountAmount: 0,
-                      taxAmount: taxAmount,
-                      total: cartTotal,
-                      source: 'DigitalMenu',
-                      tableNumber: orderType === 'dine_in' ? tableNumber : undefined,
-                      customerPhone: orderType !== 'dine_in' ? customerPhone : undefined,
-                      deliveryAddress: orderType === 'delivery' ? deliveryAddress : undefined
-                    }, items);
-
-                    alert(lang === 'ar' 
-                      ? 'تم تسجيل طلبك بنجاح وسيتم إرساله إلى المطبخ والـ POS!' 
-                      : 'Your contactless order has been placed successfully & transmitted to Kitchen and POS!');
-                    
-                    // Reset fields
-                    setCart([]);
-                    setTableNumber('');
-                    setCustomerName('');
-                    setCustomerPhone('');
-                    setDeliveryAddress('');
-                    setFormErrors({});
-                    setShowCartDrawer(false);
-                  }}
-                  className="w-full py-3 bg-rose-600 text-white font-bold text-xs rounded-full hover:bg-rose-700 transition shadow-sm uppercase tracking-wider cursor-pointer"
-                >
-                  {lang === 'ar' ? 'إرسال الطلب للمطبخ والـ POS 🚀' : 'Transmit Order to Kitchen & POS 🚀'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Floating Mobile Cart FAB */}
-      {cart.length > 0 && !showCartDrawer && (
-        <div className="fixed bottom-6 left-4 right-4 z-40 md:hidden animate-bounce-short shadow-xl">
-          <button 
-            onClick={() => setShowCartDrawer(true)}
-            className="w-full bg-[var(--tenant-primary)] hover:opacity-95 text-white py-3.5 px-6 rounded-2xl flex items-center justify-between font-bold text-sm shadow-lg transition-all"
-          >
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-white/20 text-[10px] font-bold text-white flex items-center justify-center">
-                {cart.reduce((sum, item) => sum + item.quantity, 0)}
-              </span>
-              <span>{lang === 'ar' ? 'الذهاب للدفع وإرسال الطلب 🚀' : 'Go to Checkout & Transmit Order 🚀'}</span>
-            </div>
-            
-            <div className="flex items-center gap-2 font-bold">
-              <span className="opacity-50">|</span>
-              <span>{cartTotal.toFixed(2)} <SaudiRiyalIcon /></span>
-              <ShoppingBag className="w-4 h-4" />
-            </div>
-          </button>
         </div>
       )}
 
