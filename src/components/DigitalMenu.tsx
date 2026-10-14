@@ -15,6 +15,10 @@ const SaudiRiyalIcon = ({ className = "h-[0.8em] w-auto inline-block align-middl
   );
 };
 
+// Meat Port restaurant — Khobar, Olaya, Bashar Ibn Bard
+const MAP_DIRECTIONS_URL = 'https://maps.app.goo.gl/cPWkidCHxRaWesX77';
+const MAP_EMBED_URL = 'https://maps.google.com/maps?q=26.2978682,50.1773371&z=17&output=embed';
+
 const highlightText = (text: string, highlight: string) => {
   if (!highlight.trim()) return <span>{text}</span>;
   const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\interface DigitalMenuProps {')})`, 'gi');
@@ -420,6 +424,7 @@ export default function DigitalMenu({
             {featuredProducts.length > 0 && (
               <a href="#featured" className="hover:text-[var(--tenant-primary)] transition">{lang === 'ar' ? 'توصيات الشيف' : 'Chef’s Specials'}</a>
             )}
+            <a href="#location" className="hover:text-[var(--tenant-primary)] transition">{lang === 'ar' ? 'موقعنا' : 'Location'}</a>
             <a href="#footer" className="hover:text-[var(--tenant-primary)] transition">{lang === 'ar' ? 'اتصل بنا' : 'Contact'}</a>
           </div>
 
@@ -524,8 +529,15 @@ export default function DigitalMenu({
                     {lang === 'ar' ? 'توصيات الشيف' : 'Chef Specials'}
                   </a>
                 )}
-                <a 
-                  href="#footer" 
+                <a
+                  href="#location"
+                  onClick={() => setIsMobileDrawerOpen(false)}
+                  className="text-xs font-extrabold py-2 px-3 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 transition"
+                >
+                  {lang === 'ar' ? 'موقعنا' : 'Location'}
+                </a>
+                <a
+                  href="#footer"
                   onClick={() => setIsMobileDrawerOpen(false)}
                   className="text-xs font-extrabold py-2 px-3 rounded-lg hover:bg-rose-500/10 hover:text-rose-600 transition"
                 >
@@ -632,6 +644,15 @@ export default function DigitalMenu({
               <span>•</span>
               <span>📍 {lang === 'ar' ? 'الخبر - العليا - بشار بن برد' : 'Khobar - Olaya - Bashar Bin Burd'}</span>
             </div>
+            <a
+              href={MAP_DIRECTIONS_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-gray-900 text-[10px] md:text-xs font-black shadow-lg hover:scale-105 transition-transform"
+            >
+              <MapPin className="w-3.5 h-3.5 text-[var(--tenant-primary)]" />
+              <span>{lang === 'ar' ? 'موقعنا على الخريطة' : 'Get Directions'}</span>
+            </a>
           </div>
         </div>
       </div>
@@ -1221,7 +1242,48 @@ export default function DigitalMenu({
               )}
             </div>
           </div>
-        </div>      </main>
+        </div>
+
+        {/* Restaurant Location Map */}
+        <section id="location" className="scroll-mt-40" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <div className={`rounded-3xl overflow-hidden border shadow-sm ${
+            darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-150'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 shrink-0 rounded-2xl bg-[var(--tenant-primary)]/10 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-[var(--tenant-primary)]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white">
+                    {lang === 'ar' ? 'موقعنا' : 'Our Location'}
+                  </h3>
+                  <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
+                    {lang === 'ar' ? 'الخبر - العليا - شارع بشار بن برد' : 'Khobar - Olaya - Bashar Ibn Bard St.'}
+                  </p>
+                </div>
+              </div>
+              <a
+                href={MAP_DIRECTIONS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--tenant-primary)] text-white text-xs font-black hover:opacity-90 transition"
+              >
+                <MapPin className="w-4 h-4" />
+                <span>{lang === 'ar' ? 'افتح في خرائط جوجل' : 'Open in Google Maps'}</span>
+              </a>
+            </div>
+            <iframe
+              title={lang === 'ar' ? 'خريطة موقع المطعم' : 'Restaurant location map'}
+              src={MAP_EMBED_URL}
+              className="w-full h-64 md:h-80 border-0 block"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      </main>
 
       {/* Custom Premium Restaurant Website Footer */}
       <footer id="footer" className={`border-t transition-colors duration-300 ${
