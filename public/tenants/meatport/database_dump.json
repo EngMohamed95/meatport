@@ -146,49 +146,6 @@
   ],
   "products": [
     {
-      "id": "mp-p-004",
-      "tenantId": "t-1",
-      "categoryId": "c-mp-steaks",
-      "subCategoryId": null,
-      "nameEn": "NEW YORK STEAK",
-      "nameAr": "ستيك نيويورك",
-      "descriptionEn": "Striploin 350 gr. sea salt 4 gr. black pepper 2 gr. olive oil 8 ml. with baked potato 150 gr. spinach 80 gr.",
-      "descriptionAr": "ستربلوين: 350 جرام، ملح بحري 4 جرام، فلفل أسود 2 جرام، زيت زيتون: 8 مل مع بطاطس مخبوزة: 150 جرام، سبانخ 80 جرام.",
-      "price": 149,
-      "costPrice": 59.6,
-      "profit": 89.4,
-      "margin": 60,
-      "calories": 850,
-      "preparationTime": 15,
-      "sku": "MP-004",
-      "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-004-new-york-steak.jpg",
-      "videoUrl": null,
-      "displayOrder": 1,
-      "isVisible": true,
-      "isFeatured": false,
-      "isRecommended": false,
-      "isPopular": false,
-      "trackStock": false,
-      "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
-      "modifierGroupIds": [],
-      "sizes": [
-        {
-          "id": "size-mp-p-004-regular",
-          "nameEn": "Regular",
-          "nameAr": "عادي",
-          "priceDifference": 0,
-          "calories": 0,
-          "sku": "MP-004-REG"
-        }
-      ],
-      "taxRate": 0.15,
-      "discountRate": 0
-    },
-    {
       "id": "mp-p-017",
       "tenantId": "t-1",
       "categoryId": "c-mp-kebabs",
@@ -416,11 +373,10 @@
       "id": "mp-p-067",
       "tenantId": "t-1",
       "categoryId": "c-mp-soups",
-      "subCategoryId": null,
-      "nameEn": "CHEF SOUP",
-      "nameAr": "شوربة الشيف",
-      "descriptionEn": "Chef's daily soup.",
-      "descriptionAr": "شوربة الشيف اليومية.",
+      "nameEn": "LENTİL SOUP ",
+      "nameAr": "شوربة عدس ",
+      "descriptionEn": "red lentils,onion,carrot,patato,flour,butter,vegetable oil,salt,black pepper,water",
+      "descriptionAr": "عدس أحمر، بصل، جزر، بطاطس، دقيق، زبدة، زيت نباتي، ملح، فلفل أسود، وماء.",
       "price": 19,
       "costPrice": 7.6,
       "profit": 11.4,
@@ -428,9 +384,7 @@
       "calories": 200,
       "preparationTime": 15,
       "sku": "MP-067",
-      "barcode": null,
       "imageUrl": "/tenants/meatport/assets/products/mp-p-067-lentil-soup.png",
-      "videoUrl": null,
       "displayOrder": 1,
       "isVisible": true,
       "isFeatured": false,
@@ -438,21 +392,24 @@
       "isPopular": false,
       "trackStock": false,
       "stockQuantity": 0,
-      "recipeLink": null,
       "allergens": [
         "Gluten",
         "Milk"
       ],
-      "nutrition": null,
+      "nutrition": {
+        "carbs": 39,
+        "protein": 20,
+        "fat": 25
+      },
       "modifierGroupIds": [],
       "sizes": [
         {
-          "id": "size-mp-p-067-regular",
+          "id": "s-opt-0-1792055666955",
           "nameEn": "Regular",
           "nameAr": "عادي",
           "priceDifference": 0,
           "calories": 0,
-          "sku": "MP-067-REG"
+          "sku": "MP-067-S0"
         }
       ],
       "taxRate": 0.15,
@@ -548,51 +505,6 @@
           "priceDifference": 0,
           "calories": 0,
           "sku": "MP-090-REG"
-        }
-      ],
-      "taxRate": 0.15,
-      "discountRate": 0
-    },
-    {
-      "id": "mp-p-102",
-      "tenantId": "t-1",
-      "categoryId": "c-mp-drinks",
-      "subCategoryId": null,
-      "nameEn": "Pina Colada Juice",
-      "nameAr": "عصير بينا كولادا",
-      "descriptionEn": "Pineapple 120 ml, coconut cream 60 ml, fresh ice.",
-      "descriptionAr": "عصير بينا كولادا: مزيج منعش من الأناناس الطبيعي 120 مل مع كريمة جوز الهند 60 مل ومكعبات الثلج.",
-      "price": 22,
-      "costPrice": 8.8,
-      "profit": 13.2,
-      "margin": 60,
-      "calories": 320,
-      "preparationTime": 15,
-      "sku": "MP-102",
-      "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-102-pina-colada.png",
-      "videoUrl": null,
-      "displayOrder": 1,
-      "isVisible": true,
-      "isFeatured": true,
-      "isRecommended": true,
-      "isPopular": true,
-      "trackStock": false,
-      "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [
-        "Milk"
-      ],
-      "nutrition": null,
-      "modifierGroupIds": [],
-      "sizes": [
-        {
-          "id": "size-mp-p-102-regular",
-          "nameEn": "Regular",
-          "nameAr": "عادي",
-          "priceDifference": 0,
-          "calories": 0,
-          "sku": "MP-102-REG"
         }
       ],
       "taxRate": 0.15,
@@ -906,7 +818,6 @@
       "id": "mp-p-069",
       "tenantId": "t-1",
       "categoryId": "c-mp-soups",
-      "subCategoryId": null,
       "nameEn": "YUVALAMA SOUP",
       "nameAr": "شوربة يوفالاما",
       "descriptionEn": "Chickpeas 20g, lamb meat 20g, rice flour 10g, spices 4g, butter 10g.",
@@ -918,31 +829,32 @@
       "calories": 330,
       "preparationTime": 15,
       "sku": "MP-069",
-      "barcode": null,
       "imageUrl": "/tenants/meatport/assets/products/mp-p-069-yuvalama-soup.png",
-      "videoUrl": null,
       "displayOrder": 2,
-      "isVisible": false,
+      "isVisible": true,
       "isFeatured": false,
       "isRecommended": false,
       "isPopular": false,
       "trackStock": false,
       "stockQuantity": 0,
-      "recipeLink": null,
       "allergens": [
         "Milk",
         "Gluten"
       ],
-      "nutrition": null,
+      "nutrition": {
+        "carbs": 58,
+        "protein": 21,
+        "fat": 25
+      },
       "modifierGroupIds": [],
       "sizes": [
         {
-          "id": "size-mp-p-069-regular",
+          "id": "s-opt-0-1792055704981",
           "nameEn": "Regular",
           "nameAr": "عادي",
           "priceDifference": 0,
           "calories": 0,
-          "sku": "MP-069-REG"
+          "sku": "MP-069-S0"
         }
       ],
       "taxRate": 0.15,
@@ -1304,51 +1216,6 @@
           "priceDifference": 0,
           "calories": 0,
           "sku": "MP-060-S0"
-        }
-      ],
-      "taxRate": 0.15,
-      "discountRate": 0
-    },
-    {
-      "id": "mp-p-070",
-      "tenantId": "t-1",
-      "categoryId": "c-mp-soups",
-      "subCategoryId": null,
-      "nameEn": "KELLE PAÇA (HEAD-TROTTERS) SOUP",
-      "nameAr": "شوربة كلة باشا",
-      "descriptionEn": "50g head meat, 50g trotters, traditional spices and broth.",
-      "descriptionAr": "شوربة كلة باشا: شوربة كوارع ورأس ضان تركية تقليدية غنية بالنكهة والتوابل والثوم.",
-      "price": 30,
-      "costPrice": 12,
-      "profit": 18,
-      "margin": 60,
-      "calories": 325,
-      "preparationTime": 15,
-      "sku": "MP-070",
-      "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-070.jpg",
-      "videoUrl": null,
-      "displayOrder": 3,
-      "isVisible": false,
-      "isFeatured": false,
-      "isRecommended": false,
-      "isPopular": false,
-      "trackStock": false,
-      "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [
-        "Milk"
-      ],
-      "nutrition": null,
-      "modifierGroupIds": [],
-      "sizes": [
-        {
-          "id": "size-mp-p-070-regular",
-          "nameEn": "Regular",
-          "nameAr": "عادي",
-          "priceDifference": 0,
-          "calories": 0,
-          "sku": "MP-070-REG"
         }
       ],
       "taxRate": 0.15,
@@ -1776,7 +1643,7 @@
       "preparationTime": 15,
       "sku": "MP-108",
       "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-108-lemon-mint.png",
+      "imageUrl": "/tenants/meatport/assets/products/mp-p-108-lemon-mint-22.png",
       "videoUrl": null,
       "displayOrder": 4,
       "isVisible": true,
@@ -1985,52 +1852,9 @@
       "discountRate": 0
     },
     {
-      "id": "mp-p-new-mojito-7up",
-      "tenantId": "t-1",
-      "categoryId": "c-mp-drinks",
-      "subCategoryId": null,
-      "nameEn": "Mojito 7Up",
-      "nameAr": "موهيتو سفن أب",
-      "descriptionEn": "Refreshing mojito with mint, lemon, mixed berries and 7Up.",
-      "descriptionAr": "موهيتو منعش بالنعناع والليمون والتوت المشكل مع سفن أب.",
-      "price": 26,
-      "costPrice": 10.4,
-      "profit": 15.6,
-      "margin": 60,
-      "preparationTime": 5,
-      "sku": "MP-MOJITO-7UP",
-      "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-new-mojito-7up.png",
-      "videoUrl": null,
-      "displayOrder": 5,
-      "isVisible": true,
-      "isFeatured": false,
-      "isRecommended": false,
-      "isPopular": false,
-      "trackStock": false,
-      "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
-      "modifierGroupIds": [],
-      "sizes": [
-        {
-          "id": "size-mp-p-new-mojito-7up-regular",
-          "nameEn": "Regular",
-          "nameAr": "عادي",
-          "priceDifference": 0,
-          "calories": 0,
-          "sku": "MP-MOJITO-7UP-REG"
-        }
-      ],
-      "taxRate": 0.15,
-      "discountRate": 0
-    },
-    {
       "id": "mp-p-new-shawarma-wrap-small",
       "tenantId": "t-1",
       "categoryId": "c-mp-shawarmas",
-      "subCategoryId": null,
       "nameEn": "Small Shawarma Wrap (40 gm)",
       "nameAr": "سندوتش شاورما صغير",
       "descriptionEn": "Small beef shawarma wrap with 40 gm of shawarma.",
@@ -2039,11 +1863,10 @@
       "costPrice": 4.4,
       "profit": 6.6,
       "margin": 60,
+      "calories": 250,
       "preparationTime": 5,
       "sku": "MP-SHW-S",
-      "barcode": null,
       "imageUrl": "/tenants/meatport/assets/products/mp-p-new-shawarma-wrap-small.png",
-      "videoUrl": null,
       "displayOrder": 5,
       "isVisible": true,
       "isFeatured": false,
@@ -2051,18 +1874,24 @@
       "isPopular": false,
       "trackStock": false,
       "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
+      "allergens": [
+        "Gluten",
+        "Eggs"
+      ],
+      "nutrition": {
+        "carbs": 15,
+        "protein": 34,
+        "fat": 27
+      },
       "modifierGroupIds": [],
       "sizes": [
         {
-          "id": "size-mp-p-new-shawarma-wrap-small-regular",
+          "id": "s-opt-0-1792055050522",
           "nameEn": "Regular",
           "nameAr": "عادي",
           "priceDifference": 0,
           "calories": 0,
-          "sku": "MP-SHW-S-REG"
+          "sku": "MP-SHW-S-S0"
         }
       ],
       "taxRate": 0.15,
@@ -2248,52 +2077,9 @@
       "discountRate": 0
     },
     {
-      "id": "mp-p-new-mojito-red-bull",
-      "tenantId": "t-1",
-      "categoryId": "c-mp-drinks",
-      "subCategoryId": null,
-      "nameEn": "Mojito Red Bull",
-      "nameAr": "موهيتو ريد بول",
-      "descriptionEn": "Refreshing mojito with mint, lemon, mixed berries and Red Bull.",
-      "descriptionAr": "موهيتو منعش بالنعناع والليمون والتوت المشكل مع ريد بول.",
-      "price": 30,
-      "costPrice": 12,
-      "profit": 18,
-      "margin": 60,
-      "preparationTime": 5,
-      "sku": "MP-MOJITO-RB",
-      "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-new-mojito-red-bull.png",
-      "videoUrl": null,
-      "displayOrder": 6,
-      "isVisible": true,
-      "isFeatured": false,
-      "isRecommended": false,
-      "isPopular": false,
-      "trackStock": false,
-      "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
-      "modifierGroupIds": [],
-      "sizes": [
-        {
-          "id": "size-mp-p-new-mojito-red-bull-regular",
-          "nameEn": "Regular",
-          "nameAr": "عادي",
-          "priceDifference": 0,
-          "calories": 0,
-          "sku": "MP-MOJITO-RB-REG"
-        }
-      ],
-      "taxRate": 0.15,
-      "discountRate": 0
-    },
-    {
       "id": "mp-p-new-shawarma-wrap-medium",
       "tenantId": "t-1",
       "categoryId": "c-mp-shawarmas",
-      "subCategoryId": null,
       "nameEn": "Medium Shawarma Wrap (60 gm)",
       "nameAr": "سندوتش شاورما وسط",
       "descriptionEn": "Medium beef shawarma wrap with 60 gm of shawarma.",
@@ -2302,11 +2088,10 @@
       "costPrice": 8.8,
       "profit": 13.2,
       "margin": 60,
+      "calories": 350,
       "preparationTime": 5,
       "sku": "MP-SHW-M",
-      "barcode": null,
       "imageUrl": "/tenants/meatport/assets/products/mp-p-new-shawarma-wrap-medium.png",
-      "videoUrl": null,
       "displayOrder": 6,
       "isVisible": true,
       "isFeatured": false,
@@ -2314,18 +2099,24 @@
       "isPopular": false,
       "trackStock": false,
       "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
+      "allergens": [
+        "Gluten",
+        "Eggs"
+      ],
+      "nutrition": {
+        "carbs": 47,
+        "protein": 13,
+        "fat": 23
+      },
       "modifierGroupIds": [],
       "sizes": [
         {
-          "id": "size-mp-p-new-shawarma-wrap-medium-regular",
+          "id": "s-opt-0-1792055520002",
           "nameEn": "Regular",
           "nameAr": "عادي",
           "priceDifference": 0,
           "calories": 0,
-          "sku": "MP-SHW-M-REG"
+          "sku": "MP-SHW-M-S0"
         }
       ],
       "taxRate": 0.15,
@@ -2509,6 +2300,48 @@
           "priceDifference": 0,
           "calories": 0,
           "sku": "MP-NEW-FATTOUSH-REG"
+        }
+      ],
+      "taxRate": 0.15,
+      "discountRate": 0
+    },
+    {
+      "id": "mp-p-new-pickled-beets",
+      "tenantId": "t-1",
+      "categoryId": "c-mp-mezes",
+      "subCategoryId": null,
+      "nameEn": "PICKLED BEETS",
+      "nameAr": "مخلل شمندر",
+      "descriptionEn": "Assorted homemade pickles: cucumber, carrot, turnip and cauliflower.",
+      "descriptionAr": "مخللات منزلية مشكلة: خيار، جزر، لفت وقرنبيط.",
+      "price": 15,
+      "costPrice": 6,
+      "profit": 9,
+      "margin": 60,
+      "preparationTime": 2,
+      "sku": "MP-PKB",
+      "barcode": null,
+      "imageUrl": "/tenants/meatport/assets/products/mp-p-new-pickled-beets.png",
+      "videoUrl": null,
+      "displayOrder": 7,
+      "isVisible": true,
+      "isFeatured": false,
+      "isRecommended": false,
+      "isPopular": false,
+      "trackStock": false,
+      "stockQuantity": 0,
+      "recipeLink": null,
+      "allergens": [],
+      "nutrition": null,
+      "modifierGroupIds": [],
+      "sizes": [
+        {
+          "id": "size-mp-p-new-pickled-beets-regular",
+          "nameEn": "Regular",
+          "nameAr": "عادي",
+          "priceDifference": 0,
+          "calories": 0,
+          "sku": "MP-PKB-REG"
         }
       ],
       "taxRate": 0.15,
@@ -2741,21 +2574,18 @@
       "id": "mp-p-027",
       "tenantId": "t-1",
       "categoryId": "c-mp-kebabs",
-      "subCategoryId": null,
       "nameEn": "HALF CHICKEN",
       "nameAr": "نصف دجاجة مشوية",
       "descriptionEn": "Half chicken 350 gr.spices 3 gr.salt 3 gr.butter 10 gr.rice 100 gr.with green pepper,tomato,rice.",
       "descriptionAr": "نصف دجاجة 350 جرام، بهارات 3 جرام، ملح 3 جرام، زبدة 10 جرام، أرز 100 جرام مع فلفل أخضر، طماطم، أرز.",
-      "price": 48,
+      "price": 32,
       "costPrice": 12.8,
-      "profit": 35.2,
-      "margin": 73.33333333333334,
+      "profit": 19.2,
+      "margin": 60,
       "calories": 600,
       "preparationTime": 15,
       "sku": "MP-027",
-      "barcode": null,
       "imageUrl": "/tenants/meatport/assets/products/mp-p-027-half-chicken.png",
-      "videoUrl": null,
       "displayOrder": 9,
       "isVisible": true,
       "isFeatured": false,
@@ -2763,20 +2593,23 @@
       "isPopular": false,
       "trackStock": false,
       "stockQuantity": 0,
-      "recipeLink": null,
       "allergens": [
         "Milk"
       ],
-      "nutrition": null,
+      "nutrition": {
+        "carbs": 52,
+        "protein": 10,
+        "fat": 26
+      },
       "modifierGroupIds": [],
       "sizes": [
         {
-          "id": "size-mp-p-027-regular",
+          "id": "s-opt-0-1792057807630",
           "nameEn": "Regular",
           "nameAr": "عادي",
           "priceDifference": 0,
           "calories": 0,
-          "sku": "MP-027-REG"
+          "sku": "MP-027-S0"
         }
       ],
       "taxRate": 0.15,
@@ -3173,7 +3006,6 @@
       "id": "mp-p-new-meter-kebab",
       "tenantId": "t-1",
       "categoryId": "c-mp-kebabs",
-      "subCategoryId": null,
       "nameEn": "METER KEBAB (1 METER)",
       "nameAr": "كباب متر",
       "descriptionEn": "One-meter mixed kebab platter for sharing.",
@@ -3182,11 +3014,10 @@
       "costPrice": 114,
       "profit": 171,
       "margin": 60,
+      "calories": 2200,
       "preparationTime": 25,
       "sku": "MP-MTRK",
-      "barcode": null,
       "imageUrl": "/tenants/meatport/assets/products/mp-p-new-meter-kebab.png",
-      "videoUrl": null,
       "displayOrder": 12,
       "isVisible": true,
       "isFeatured": false,
@@ -3194,18 +3025,23 @@
       "isPopular": false,
       "trackStock": false,
       "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
+      "allergens": [
+        "Gluten"
+      ],
+      "nutrition": {
+        "carbs": 29,
+        "protein": 11,
+        "fat": 24
+      },
       "modifierGroupIds": [],
       "sizes": [
         {
-          "id": "size-mp-p-new-meter-kebab-regular",
+          "id": "s-opt-0-1792056241150",
           "nameEn": "Regular",
           "nameAr": "عادي",
           "priceDifference": 0,
           "calories": 0,
-          "sku": "MP-MTRK-REG"
+          "sku": "MP-MTRK-S0"
         }
       ],
       "taxRate": 0.15,
@@ -3254,108 +3090,20 @@
       "discountRate": 0
     },
     {
-      "id": "mp-p-new-red-bull",
-      "tenantId": "t-1",
-      "categoryId": "c-mp-drinks",
-      "subCategoryId": null,
-      "nameEn": "Red Bull",
-      "nameAr": "ريد بول",
-      "descriptionEn": "Chilled can of Red Bull energy drink.",
-      "descriptionAr": "مشروب طاقة ريد بول مثلج.",
-      "price": 20,
-      "costPrice": 8,
-      "profit": 12,
-      "margin": 60,
-      "preparationTime": 5,
-      "sku": "MP-REDBULL",
-      "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-new-red-bull.png",
-      "videoUrl": null,
-      "displayOrder": 15,
-      "isVisible": true,
-      "isFeatured": false,
-      "isRecommended": false,
-      "isPopular": false,
-      "trackStock": false,
-      "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
-      "modifierGroupIds": [],
-      "sizes": [
-        {
-          "id": "size-mp-p-new-red-bull-regular",
-          "nameEn": "Regular",
-          "nameAr": "عادي",
-          "priceDifference": 0,
-          "calories": 0,
-          "sku": "MP-REDBULL-REG"
-        }
-      ],
-      "taxRate": 0.15,
-      "discountRate": 0
-    },
-    {
-      "id": "mp-p-new-code-red",
-      "tenantId": "t-1",
-      "categoryId": "c-mp-drinks",
-      "subCategoryId": null,
-      "nameEn": "Code Red",
-      "nameAr": "كود ريد",
-      "descriptionEn": "Chilled 250ml can of Code Red energy drink.",
-      "descriptionAr": "مشروب طاقة كود ريد مثلج 250 مل.",
-      "price": 15,
-      "costPrice": 6,
-      "profit": 9,
-      "margin": 60,
-      "preparationTime": 5,
-      "sku": "MP-CODERED",
-      "barcode": null,
-      "imageUrl": "/tenants/meatport/assets/products/mp-p-new-code-red.png",
-      "videoUrl": null,
-      "displayOrder": 16,
-      "isVisible": true,
-      "isFeatured": false,
-      "isRecommended": false,
-      "isPopular": false,
-      "trackStock": false,
-      "stockQuantity": 0,
-      "recipeLink": null,
-      "allergens": [],
-      "nutrition": null,
-      "modifierGroupIds": [],
-      "sizes": [
-        {
-          "id": "size-mp-p-new-code-red-regular",
-          "nameEn": "Regular",
-          "nameAr": "عادي",
-          "priceDifference": 0,
-          "calories": 0,
-          "sku": "MP-CODERED-REG"
-        }
-      ],
-      "taxRate": 0.15,
-      "discountRate": 0
-    },
-    {
       "id": "mp-p-122",
       "tenantId": "t-1",
       "categoryId": "c-mp-drinks",
-      "subCategoryId": null,
-      "nameEn": "Plastic Bottle Water",
-      "nameAr": "زجاجة مياه بلاستيك",
-      "descriptionEn": "Pure bottled mineral water in a plastic bottle.",
-      "descriptionAr": "مياه معدنية نقية في زجاجة بلاستيكية.",
-      "price": 2,
+      "nameEn": "GLASS BOTLE WATER",
+      "nameAr": "زجاجة مياه زجاج",
+      "descriptionEn": "Pure bottled mineral water in a Glass bottle.",
+      "descriptionAr": "مياه معدنية نقية في زجاجة زجاج.",
+      "price": 4,
       "costPrice": 0.8,
-      "profit": 1.2,
-      "margin": 60,
-      "calories": 0,
+      "profit": 3.2,
+      "margin": 80,
       "preparationTime": 15,
       "sku": "MP-122",
-      "barcode": null,
       "imageUrl": "/tenants/meatport/assets/products/mp-p-122-bottle-water.png",
-      "videoUrl": null,
       "displayOrder": 17,
       "isVisible": true,
       "isFeatured": false,
@@ -3363,18 +3111,21 @@
       "isPopular": false,
       "trackStock": false,
       "stockQuantity": 0,
-      "recipeLink": null,
       "allergens": [],
-      "nutrition": null,
+      "nutrition": {
+        "carbs": 41,
+        "protein": 17,
+        "fat": 8
+      },
       "modifierGroupIds": [],
       "sizes": [
         {
-          "id": "size-mp-p-122-regular",
+          "id": "s-opt-0-1792056048815",
           "nameEn": "Regular",
           "nameAr": "عادي",
           "priceDifference": 0,
           "calories": 0,
-          "sku": "MP-122-REG"
+          "sku": "MP-122-S0"
         }
       ],
       "taxRate": 0.15,
