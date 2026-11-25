@@ -224,7 +224,7 @@ export default defineConfig(() => {
               });
               return;
             }
-            if (req.url === '/api/list-images' && req.method === 'GET') {
+            if ((requestPath === '/api/list-images' || requestPath === '/api/upload-image.php') && req.method === 'GET') {
               try {
                 const dir = path.resolve(__dirname, 'public', 'tenants', 'meatport', 'assets', 'products');
                 if (!fs.existsSync(dir)) {
@@ -242,7 +242,7 @@ export default defineConfig(() => {
               }
               return;
             }
-            if (req.url === '/api/upload-image' && req.method === 'POST') {
+            if ((requestPath === '/api/upload-image' || requestPath === '/api/upload-image.php') && req.method === 'POST') {
               let body = '';
               req.on('data', chunk => { body += chunk; });
               req.on('end', () => {

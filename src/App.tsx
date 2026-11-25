@@ -780,6 +780,7 @@ export default function App() {
           <AdminDashboard
           tenant={activeTenant}
           setTenants={setTenants}
+          getManagerPin={() => managerPinRef.current}
           branches={activeTenantBranches}
           setBranches={setBranches}
           products={products}
@@ -1042,6 +1043,7 @@ export default function App() {
                     <AdminDashboard 
                       tenant={activeTenant}
                       setTenants={setTenants}
+                      getManagerPin={() => managerPinRef.current}
                       branches={activeTenantBranches}
                       setBranches={setBranches}
                       products={products}

@@ -36,6 +36,7 @@ interface AdminDashboardProps {
   setBranches?: React.Dispatch<React.SetStateAction<Branch[]>>;
   nationalDayTheme?: boolean;
   setNationalDayTheme?: (value: boolean) => void;
+  getManagerPin?: () => string;
 }
 
 export default function AdminDashboard({
@@ -65,7 +66,8 @@ export default function AdminDashboard({
   setDarkMode,
   setBranches,
   nationalDayTheme,
-  setNationalDayTheme
+  setNationalDayTheme,
+  getManagerPin
 }: AdminDashboardProps) {
   const [localLang, setLocalLang] = useState<'en' | 'ar'>(() => {
     return propLang || (localStorage.getItem('saas_lang') as 'en' | 'ar') || 'ar';
@@ -337,7 +339,7 @@ export default function AdminDashboard({
   useEffect(() => {
     if (showMediaGallery) {
       setGalleryLoading(true);
-      fetch('/api/list-images')
+      fetch(`/api/upload-image.php?t=${Date.now()}`, { cache: 'no-store' })
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.images)) {
@@ -356,84 +358,72 @@ export default function AdminDashboard({
     );
   }, [galleryImages, gallerySearch]);
 
-  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Uploads an image to /api/upload-image.php (PHP on live, Vite middleware in dev).
+  // Resolves with the public URL, or null after alerting the user with the real reason.
+  const uploadImageFile = (file: File): Promise<string | null> => new Promise(resolve => {
+    const fail = (reason: string) => {
+      alert(lang === 'ar' ? 'فشل الرفع: ' + reason : 'Upload failed: ' + reason);
+      resolve(null);
+    };
+    if (file.size > 8 * 1024 * 1024) {
+      fail(lang === 'ar' ? 'حجم الصورة أكبر من 8 ميجابايت' : 'Image is larger than 8 MB');
+      return;
+    }
     const reader = new FileReader();
+    reader.onerror = () => fail(lang === 'ar' ? 'تعذرت قراءة الملف' : 'Could not read the file');
     reader.onload = async (event) => {
       const base64Data = event.target?.result as string;
       try {
-        const res = await fetch('/api/upload-image', {
+        const res = await fetch('/api/upload-image.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': getManagerPin?.() || '' },
           body: JSON.stringify({ fileName: file.name, base64Data })
         });
-        const data = await res.json();
-        if (data.success) {
-          setProdImageUrl(data.url);
+        const text = await res.text();
+        let data: any;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          fail(`HTTP ${res.status} - ${lang === 'ar' ? 'السيرفر لم يرجع استجابة صحيحة' : 'server returned an invalid response'}`);
+          return;
+        }
+        if (data.success && data.url) {
           setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
+          resolve(data.url);
         } else {
-          alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
+          fail(data.error || `HTTP ${res.status}`);
         }
       } catch (err) {
-        alert(lang === 'ar' ? 'خطأ أثناء الرفع' : 'Error uploading image');
+        fail(lang === 'ar' ? 'تعذر الاتصال بالسيرفر' : 'Could not reach the server');
       }
     };
     reader.readAsDataURL(file);
+  });
+
+  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const url = await uploadImageFile(file);
+    if (url) setProdImageUrl(url);
   };
 
   const handleCategoryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const base64Data = event.target?.result as string;
-      try {
-        const res = await fetch('/api/upload-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName: file.name, base64Data })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setCatImageUrl(data.url);
-          setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
-        } else {
-          alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
-        }
-      } catch (err) {
-        alert(lang === 'ar' ? 'خطأ أثناء الرفع' : 'Error uploading image');
-      }
-    };
-    reader.readAsDataURL(file);
+    const url = await uploadImageFile(file);
+    if (url) setCatImageUrl(url);
   };
 
   const handleLogoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const base64Data = event.target?.result as string;
-      try {
-        const res = await fetch('/api/upload-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName: file.name, base64Data })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
-          if (setTenants) {
-            setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: data.url } : t));
-          }
-        } else {
-          alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
-        }
-      } catch (err) {
-        alert(lang === 'ar' ? 'خطأ أثناء الرفع' : 'Error uploading image');
-      }
-    };
-    reader.readAsDataURL(file);
+    const url = await uploadImageFile(file);
+    if (url && setTenants) {
+      setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: url } : t));
+    }
   };
 
   // Form Fields - Category
@@ -3844,38 +3834,21 @@ export default function AdminDashboard({
                     className="hidden"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
+                      e.target.value = '';
                       if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = async (event) => {
-                        const base64Data = event.target?.result as string;
-                        try {
-                          const res = await fetch('/api/upload-image', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ fileName: file.name, base64Data })
-                          });
-                          const data = await res.json();
-                          if (data.success) {
-                            setGalleryImages(prev => [data.url, ...prev.filter(img => img !== data.url)]);
-                            if (galleryTarget === 'product') {
-                              setProdImageUrl(data.url);
-                            } else if (galleryTarget === 'category') {
-                              setCatImageUrl(data.url);
-                            } else if (galleryTarget === 'logo') {
-                              if (setTenants) {
-                                setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: data.url } : t));
-                              }
-                            }
-                            setShowMediaGallery(false);
-                            setGalleryTarget(null);
-                          } else {
-                            alert(lang === 'ar' ? 'فشل الرفع: ' + data.error : 'Upload failed: ' + data.error);
-                          }
-                        } catch (err) {
-                          alert(lang === 'ar' ? 'خطأ أثناء الرفع' : 'Error uploading image');
+                      const url = await uploadImageFile(file);
+                      if (!url) return;
+                      if (galleryTarget === 'product') {
+                        setProdImageUrl(url);
+                      } else if (galleryTarget === 'category') {
+                        setCatImageUrl(url);
+                      } else if (galleryTarget === 'logo') {
+                        if (setTenants) {
+                          setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, logoUrl: url } : t));
                         }
-                      };
-                      reader.readAsDataURL(file);
+                      }
+                      setShowMediaGallery(false);
+                      setGalleryTarget(null);
                     }}
                   />
                 </label>
